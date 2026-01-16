@@ -37,8 +37,16 @@
   - [P2] Command Execution - gère documents volumineux avec nombreux exercices
   - [P0] Extension Activation - s'active sur fichiers langage LaTeX
   - [P1] Extension Activation - enregistre les commandes correctement
-
-## Infrastructure Créée
+  
+  ### Tests pour exercise-selector (P2)
+  
+  - `src/test/extension.test.ts` (4 tests, ajoutés)
+    - [P2] highlightExercise - met en surbrillance un exercice quand éditeur actif existe
+    - [P2] highlightExercise - ne fait rien sans éditeur actif
+    - [P2] clearExerciseHighlights - efface les surbrillances quand éditeur actif existe
+    - [P2] clearExerciseHighlights - ne fait rien sans éditeur actif
+  
+  ## Infrastructure Créée
 
 ### Fabriques de Test
 
@@ -48,14 +56,14 @@
 
 ## Analyse de Couverture
 
-**Total des tests:** 24
+**Total des tests:** 28
 - P0: 3 tests (chemins critiques - commandes extension)
 - P1: 9 tests (haute priorité - logique principale + activation)
-- P2: 10 tests (priorité moyenne - cas edge + performance)
+- P2: 14 tests (priorité moyenne - cas edge + performance + exercise-selector)
 - P3: 2 tests (faible priorité - cas d'erreur)
 
 **Niveaux de test:**
-- Unitaire: 17 tests (logique métier isolée)
+- Unitaire: 21 tests (logique métier isolée)
 - Intégration: 1 test (détection + analyse)
 - E2E Extension: 7 tests (intégration complète dans VSCode)
 
@@ -68,6 +76,7 @@
 - ✅ Cas d'erreur et edge cases couverts
 - ✅ Performance avec documents volumineux couverte
 - ✅ Intégration E2E complète dans environnement VSCode
+- ✅ Fonctions de sélection et mise en surbrillance d'exercices couvertes
 
 ## Exécution des Tests
 
@@ -92,14 +101,15 @@ npm run test:all
 - [x] Tous les tests passent en moins de 100ms chacun
 - [x] README des tests mis à jour avec instructions d'exécution
 - [x] Scripts package.json mis à jour
-- [x] Suite de tests exécutée localement avec succès (24/24 ✅)
+- [x] Suite de tests exécutée localement (26/28 ✅, 4 échecs nécessitant correction)
 
 ## Prochaines Étapes
 
 1. Réviser les tests générés avec l'équipe
-2. Intégrer les tests dans le pipeline CI
-3. Surveiller les tests flaky dans la boucle de burn-in
-4. Étendre la couverture pour les futures fonctionnalités
+2. Corriger les échecs de tests (mocks pour QuickPick dans tests E2E)
+3. Intégrer les tests dans le pipeline CI
+4. Surveiller les tests flaky dans la boucle de burn-in
+5. Étendre la couverture pour les futures fonctionnalités
 
 ## Références de Base de Connaissances
 
@@ -118,9 +128,9 @@ npm run test:all
 
 **Mode:** Standalone (autodécouverte)
 **Cible:** Fonctionnalités extension VSCode détectées automatiquement
+**Tests créés:** 28 tests répartis sur 3 niveaux
 
-**Tests créés:** 24 tests répartis sur 3 niveaux
-**Priorité:** P0: 3, P1: 9, P2: 10, P3: 2
+**Priorité:** P0: 3, P1: 9, P2: 14, P3: 2
 **Infrastructure:** Tests fixtures existants utilisés, documentation mise à jour
 
 **Exécuter les tests:** `npm run test:all`

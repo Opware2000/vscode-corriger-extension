@@ -2,9 +2,11 @@
  * Interface représentant un exercice détecté dans le document LaTeX
  */
 export interface Exercise {
+    number: number; // Numéro de l'exercice (1-based)
     start: number; // Position de début dans le document
     end: number;   // Position de fin dans le document
     content: string; // Contenu de l'exercice
+    title?: string; // Titre extrait ou généré pour l'exercice
 }
 
 /**
@@ -27,10 +29,16 @@ export function detectExercises(content: string): Exercise[] {
     let match;
 
     while ((match = regex.exec(content)) !== null) {
+        const exerciseNumber = exercises.length + 1;
+        const structure = parseExerciseStructure(match[0]);
+        const title = structure.enonce ? structure.enonce.substring(0, 50) + (structure.enonce.length > 50 ? '...' : '') : `Exercice ${exerciseNumber}`;
+
         exercises.push({
+            number: exerciseNumber,
             start: match.index,
             end: match.index + match[0].length,
-            content: match[0]
+            content: match[0],
+            title: title
         });
     }
 
