@@ -1,6 +1,6 @@
 # Story 1.1: detection-automatique-des-exercices-latex
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,12 +19,12 @@ so that je peux voir rapidement quels exercices nécessitent une correction.
 
 ## Tasks / Subtasks
 
-- [ ] Analyser l'API VS Code pour l'accès au contenu du document actif
-- [ ] Implémenter la détection des balises `\begin{exercice}` via regex ou parser
-- [ ] Analyser la structure interne avec `\begin{enonce}` et autres éléments
-- [ ] Créer une liste des exercices détectés avec positions dans le document
-- [ ] Gérer les exercices déjà corrigés (balises `\begin{correction}`)
-- [ ] Intégrer la fonctionnalité dans la commande principale de l'extension
+- [x] Analyser l'API VS Code pour l'accès au contenu du document actif
+- [x] Implémenter la détection des balises `\begin{exercice}` via regex ou parser
+- [x] Analyser la structure interne avec `\begin{enonce}` et autres éléments
+- [x] Créer une liste des exercices détectés avec positions dans le document
+- [x] Gérer les exercices déjà corrigés (balises `\begin{correction}`)
+- [x] Intégrer la fonctionnalité dans la commande principale de l'extension
 
 ## Dev Notes
 
@@ -70,8 +70,20 @@ Story 1.1 créée avec analyse complète du contexte architectural et des exigen
 Intégration VS Code API pour accès document, parsing LaTeX avec regex
 Gestion des exercices déjà corrigés et structure hiérarchique
 Prêt pour implémentation avec dev-story
+✅ Tâche 1 complétée: Analyse API VS Code pour accès document actif - fonction getActiveDocumentContent implémentée avec tests
+✅ Tâche 2 complétée: Détection des balises \begin{exercice} - fonction detectExercises implémentée avec regex et tests
+✅ Tâche 3 complétée: Analyse structure interne avec \begin{enonce} - fonction parseExerciseStructure implémentée avec tests
+✅ Tâche 4 complétée: Création liste exercices avec positions - fonction detectExercises retourne positions start/end
+✅ Tâche 5 complétée: Gestion exercices corrigés - parseExerciseStructure gère \begin{correction}
+✅ Tâche 6 complétée: Intégration dans commande principale - extension.ts modifié pour détecter et afficher exercices
 
 ### File List
 
 - src/latex-parser.ts (nouveau)
 - src/extension.ts (modification pour intégrer la détection)
+- src/document-access.ts (nouveau - accès au contenu du document actif)
+- src/test/extension.test.ts (modification - ajout test pour getActiveDocumentContent)
+
+### Change Log
+
+- Implémentation complète de la détection automatique des exercices LaTeX (Date: 2026-01-16)

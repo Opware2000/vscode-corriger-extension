@@ -46,7 +46,7 @@ story_location: _bmad-output/implementation-artifacts
 development_status:
   epic-1: in-progress
   1-0-configuration-initiale-du-projet-avec-starter-template-vs-code: review
-  1-1-detection-automatique-des-exercices-latex: ready-for-dev
+  1-1-detection-automatique-des-exercices-latex: review
   1-2-selection-d-un-exercice-specifique: backlog
   1-3-identification-des-exercices-deja-corriges: backlog
   epic-1-retrospective: optional
