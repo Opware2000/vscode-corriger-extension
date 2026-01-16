@@ -2,7 +2,7 @@
   "name": "corriger-latex",
   "displayName": "Correcteur LaTeX",
   "description": "Agent de correction d'exercices LaTeX pour Copilot Chat",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "philippe",
   "engines": {
     "vscode": "^1.90.0"
@@ -11,7 +11,11 @@
     "AI",
     "Chat"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished",
+    "onLanguage:latex",
+    "onCommand:corriger-latex.corrigerDocument"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
