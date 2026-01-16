@@ -392,42 +392,10 @@ export function activate(context: vscode.ExtensionContext) {
 
                 console.log('[DEBUG] Résultat longueur:', resultat.length);
 
-                // Écrire le résultat dans le fichier LaTeX
-                const editor = vscode.window.activeTextEditor;
-                if (editor && editor.document.fileName.endsWith('.tex')) {
-                    const document = editor.document;
-                    const contenuInitial = document.getText();
-                    const selection = editor.selection;
-                    const isSelection = !selection.isEmpty;
-
-                    console.log('[DEBUG] Document longueur avant:', contenuInitial.length);
-                    console.log('[DEBUG] Est une sélection:', isSelection);
-
-                    // Vérifier la structure avant d'écrire (uniquement si remplacement total)
-                    if (!isSelection && !validerStructureLaTeX(resultat)) {
-                        stream.markdown('\n\n⚠️ **Avertissement** : La correction générée semble avoir une structure invalide.\n');
-                    }
-
-                    // Déterminer si on remplace la sélection ou tout le document
-                    const rangeToReplace = isSelection ? selection : undefined;
-
-                    // Écriture atomique avec vérification
-                    const succes = await ecrireCorrectionAtomique(editor, resultat, rangeToReplace);
-
-                    if (succes) {
-                        stream.markdown('\n\n✅ Correction écrite dans le fichier !\n');
-                        // Afficher quand même le résultat dans un bloc de code pour référence
-                        stream.markdown('\n**Résultat généré :**\n\n```latex\n' + resultat + '\n```\n');
-                    } else {
-                        // Restaurer l'état initial en cas d'échec
-                        await restaurerDocument(editor, contenuInitial);
-                        stream.markdown('\n\n❌ **Erreur** : L\'écriture a échoué et le document a été restauré.\n');
-                        // Afficher le résultat dans un bloc de code pour que l'utilisateur puisse le copier
-                        stream.markdown('\n**Voici la correction générée (copiez-la manuellement) :**\n\n```latex\n' + resultat + '\n```\n');
-                    }
-                } else {
-                    stream.markdown('\n\n⚠️ Aucun fichier LaTeX actif. Voici la correction :\n\n```latex\n' + resultat + '\n```\n');
-                }
+                // Le chat affiche uniquement le résultat dans un bloc de code
+                // L'utilisateur peut ensuite copier-coller le résultat dans son fichier
+                stream.markdown('\n**Voici la correction générée :**\n\n```latex\n' + resultat + '\n```\n');
+                stream.markdown('\n💡 *Copiez ce bloc de code et collez-le dans votre fichier LaTeX.*\n');
 
             } catch (err) {
                 if (err instanceof vscode.LanguageModelError) {
