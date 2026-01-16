@@ -101,18 +101,45 @@ async function corrigerTexte(texte: string, stream?: vscode.ChatResponseStream, 
         )
     ];
 
-    // Sélectionner le modèle Claude Sonnet 4.5
+    // Sélectionner le modèle gpt-5.2-codex
     const [model] = await vscode.lm.selectChatModels({
         vendor: 'copilot',
-        family: 'claude-sonnet'
+        family: 'gpt-5.2-codex'
     });
 
     if (!model) {
-        const errorMsg = '❌ Aucun modèle de langage disponible. Assurez-vous que GitHub Copilot est activé.';
-        if (stream) {
-            stream.markdown(errorMsg);
+        // Fallback: essayer sans filtre de famille
+        const [modelFallback] = await vscode.lm.selectChatModels({ vendor: 'copilot' });
+        if (!modelFallback) {
+            const errorMsg = '❌ Aucun modèle de langage disponible. Assurez-vous que GitHub Copilot est activé.';
+            if (stream) {
+                stream.markdown(errorMsg);
+            }
+            throw new Error(errorMsg);
         }
-        throw new Error(errorMsg);
+        if (stream) {
+            stream.markdown(`⚠️ **gpt-5.2-codex non disponible, utilisation de : ${modelFallback.family}**\n\n`);
+        }
+        const chatResponse = await modelFallback.sendRequest(messages, {}, token);
+        let resultat = '';
+        for await (const fragment of chatResponse.text) {
+            resultat += fragment;
+            if (stream) {
+                stream.markdown(fragment);
+            }
+        }
+        if (!resultat || resultat.trim() === '') {
+            const errorMsg = 'Le modèle n\'a pas généré de correction.';
+            if (stream) {
+                stream.markdown(`❌ ${errorMsg}`);
+            }
+            throw new Error(errorMsg);
+        }
+        return resultat;
+    }
+
+    if (stream) {
+        stream.markdown(`🔧 Utilisation du modèle : **${model.family}**\n\n`);
     }
 
     // Envoyer la requête avec gestion du token d'annulation
@@ -223,7 +250,7 @@ export function activate(context: vscode.ExtensionContext) {
                     }
                 }
 
-                await corrigerTexte(texteACorriger, stream)
+                await corrigerTexte(texteACorriger, stream, token);
 
             } catch (err) {
                 if (err instanceof vscode.LanguageModelError) {
