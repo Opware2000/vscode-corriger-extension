@@ -2,7 +2,7 @@
 
 ## Overview
 
-This test suite uses Playwright for end-to-end testing with a focus on reliability, maintainability, and developer experience.
+This test suite combines unit tests, VSCode extension E2E tests, and Playwright end-to-end tests with a focus on reliability, maintainability, and developer experience. Unit tests validate core business logic, extension E2E tests verify VSCode integration, while Playwright E2E tests ensure complete user workflows.
 
 ## Setup Instructions
 
@@ -24,23 +24,50 @@ This test suite uses Playwright for end-to-end testing with a focus on reliabili
 
 ## Running Tests
 
-### Local Development
+### Unit Tests
 
 ```bash
-# Run all E2E tests
+# Run all unit tests (VSCode extension tests)
+npm test
+
+# Run unit tests with VSCode test runner
+npm run test:unit
+```
+
+### VSCode Extension E2E Tests
+
+```bash
+# Run extension E2E tests (integration tests in VSCode environment)
 npm run test:e2e
 
+# Run extension E2E tests with verbose output
+npm run test:e2e -- --verbose
+```
+
+### Playwright End-to-End Tests
+
+```bash
+# Run Playwright E2E tests (web application tests)
+npm run test:integration
+
 # Run in headed mode (see browser)
-npm run test:e2e -- --headed
+npm run test:integration -- --headed
 
 # Run specific test file
-npm run test:e2e -- tests/e2e/user-authentication.spec.ts
+npm run test:integration -- tests/e2e/user-authentication.spec.ts
 
 # Debug specific test
-npm run test:e2e -- tests/e2e/user-authentication.spec.ts --debug
+npm run test:integration -- tests/e2e/user-authentication.spec.ts --debug
 
 # Run tests in specific browser
-npm run test:e2e -- --project=chromium
+npm run test:integration -- --project=chromium
+```
+
+### All Tests
+
+```bash
+# Run all test types
+npm run test:all
 ```
 
 ### CI/CD
