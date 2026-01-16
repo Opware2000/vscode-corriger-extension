@@ -205,45 +205,58 @@ function validerStructureLaTeX(texte: string): boolean {
 
 /**
  * Écrit le résultat de manière atomique avec vérification d'intégrité
+ * @param editor L'éditeur actif
+ * @param resultat Le résultat à écrire
+ * @param selection La plage de texte à remplacer (si définie, sinon tout le document)
  * @returns true si l'écriture a réussi, false sinon
  */
 async function ecrireCorrectionAtomique(
     editor: vscode.TextEditor,
-    resultat: string
+    resultat: string,
+    selection?: vscode.Range
 ): Promise<boolean> {
     const document = editor.document;
     const contenuInitial = document.getText();
 
     try {
-        // Calculer la plage complète du document
-        const fullRange = new vscode.Range(
-            document.positionAt(0),
-            document.positionAt(contenuInitial.length)
-        );
+        let range: vscode.Range;
+
+        if (selection) {
+            // Remplacer uniquement la sélection
+            range = selection;
+            console.log('[ATOMIC] Remplacement de la sélection uniquement');
+        } else {
+            // Remplacer tout le document
+            range = new vscode.Range(
+                document.positionAt(0),
+                document.positionAt(contenuInitial.length)
+            );
+            console.log('[ATOMIC] Remplacement de tout le document');
+        }
 
         // Effectuer l'édition de manière atomique
         await editor.edit(editBuilder => {
-            editBuilder.replace(fullRange, resultat);
+            editBuilder.replace(range, resultat);
         });
 
         // Vérifier l'intégrité après écriture
         const contenuApres = editor.document.getText();
 
-        // Vérifier que le contenu a bien changé
-        if (contenuApres === contenuInitial) {
+        // Vérifier que le contenu a bien changé (uniquement si remplacement total)
+        if (!selection && contenuApres === contenuInitial) {
             console.error('[ATOMIC] Écriture n\'a pas modifié le document');
             return false;
         }
 
-        // Vérifier la structure LaTeX
-        if (!validerStructureLaTeX(contenuApres)) {
+        // Vérifier la structure LaTeX uniquement si remplacement total
+        if (!selection && !validerStructureLaTeX(contenuApres)) {
             console.error('[ATOMIC] Structure LaTeX invalide après écriture');
             console.error('[ATOMIC] Contenu après:', contenuApres.substring(0, 200));
             return false;
         }
 
-        // Vérifier que le résultat attendu est présent
-        if (!contenuApres.includes('\\begin{correction}') && !contenuApres.includes('\\begin{correction}')) {
+        // Vérifier que le résultat attendu est présent (uniquement si remplacement total)
+        if (!selection && (!contenuApres.includes('\\begin{correction}') && !contenuApres.includes('\\begin{correction}'))) {
             console.error('[ATOMIC] Correction non trouvée dans le document après écriture');
             return false;
         }
@@ -305,7 +318,7 @@ export function activate(context: vscode.ExtensionContext) {
                 cancellable: false
             }, async (progress) => {
                 try {
-                    // Sauvegarder l'état initial du document
+                    const document = editor.document;
                     const contenuInitial = document.getText();
                     console.log('[DEBUG] Longueur du document avant:', contenuInitial.length);
 
@@ -313,13 +326,16 @@ export function activate(context: vscode.ExtensionContext) {
 
                     console.log('[DEBUG] Longueur du résultat:', resultat.length);
 
-                    // Vérifier la structure avant d'écrire
-                    if (!validerStructureLaTeX(resultat)) {
+                    // Vérifier la structure avant d'écrire (uniquement si remplacement total)
+                    if (selection.isEmpty && !validerStructureLaTeX(resultat)) {
                         throw new Error('La correction générée a une structure LaTeX invalide');
                     }
 
+                    // Déterminer si on remplace la sélection ou tout le document
+                    const rangeToReplace = selection.isEmpty ? undefined : selection;
+
                     // Écriture atomique avec vérification
-                    const succes = await ecrireCorrectionAtomique(editor, resultat);
+                    const succes = await ecrireCorrectionAtomique(editor, resultat, rangeToReplace);
 
                     if (!succes) {
                         // Restaurer l'état initial en cas d'échec
@@ -381,24 +397,33 @@ export function activate(context: vscode.ExtensionContext) {
                 if (editor && editor.document.fileName.endsWith('.tex')) {
                     const document = editor.document;
                     const contenuInitial = document.getText();
+                    const selection = editor.selection;
+                    const isSelection = !selection.isEmpty;
 
                     console.log('[DEBUG] Document longueur avant:', contenuInitial.length);
+                    console.log('[DEBUG] Est une sélection:', isSelection);
 
-                    // Vérifier la structure avant d'écrire
-                    if (!validerStructureLaTeX(resultat)) {
+                    // Vérifier la structure avant d'écrire (uniquement si remplacement total)
+                    if (!isSelection && !validerStructureLaTeX(resultat)) {
                         stream.markdown('\n\n⚠️ **Avertissement** : La correction générée semble avoir une structure invalide.\n');
-                        // On continue quand même, l'utilisateur décidera
                     }
 
+                    // Déterminer si on remplace la sélection ou tout le document
+                    const rangeToReplace = isSelection ? selection : undefined;
+
                     // Écriture atomique avec vérification
-                    const succes = await ecrireCorrectionAtomique(editor, resultat);
+                    const succes = await ecrireCorrectionAtomique(editor, resultat, rangeToReplace);
 
                     if (succes) {
                         stream.markdown('\n\n✅ Correction écrite dans le fichier !\n');
+                        // Afficher quand même le résultat dans un bloc de code pour référence
+                        stream.markdown('\n**Résultat généré :**\n\n```latex\n' + resultat + '\n```\n');
                     } else {
                         // Restaurer l'état initial en cas d'échec
                         await restaurerDocument(editor, contenuInitial);
                         stream.markdown('\n\n❌ **Erreur** : L\'écriture a échoué et le document a été restauré.\n');
+                        // Afficher le résultat dans un bloc de code pour que l'utilisateur puisse le copier
+                        stream.markdown('\n**Voici la correction générée (copiez-la manuellement) :**\n\n```latex\n' + resultat + '\n```\n');
                     }
                 } else {
                     stream.markdown('\n\n⚠️ Aucun fichier LaTeX actif. Voici la correction :\n\n```latex\n' + resultat + '\n```\n');
