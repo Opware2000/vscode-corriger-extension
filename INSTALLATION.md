@@ -1,5 +1,13 @@
 # Guide d'Installation - Extension Correcteur LaTeX
 
+## Version
+
+**Version actuelle : 0.0.3**
+
+## Modèle utilisé
+
+Cette extension utilise le modèle **gpt-5.2-codex** de GitHub Copilot pour générer les corrections.
+
 ## Étape 1 : Prérequis
 
 Assurez-vous que Node.js est installé sur votre système.
@@ -44,7 +52,7 @@ npm install -g @vscode/vsce
 vsce package
 
 # Installer l'extension
-code --install-extension corriger-latex-0.0.1.vsix
+code --install-extension corriger-latex-0.0.3.vsix
 ```
 
 ## Étape 5 : Utilisation
