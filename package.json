@@ -28,7 +28,8 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@types/vscode": "^1.108.1",
@@ -41,6 +42,8 @@
     "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1",
     "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "@playwright/test": "^1.40.0",
+    "@faker-js/faker": "^8.0.0"
   }
 }
