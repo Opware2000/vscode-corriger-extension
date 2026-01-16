@@ -23,7 +23,7 @@ brew install node
 ## Étape 2 : Installation des dépendances
 
 ```bash
-cd ~/Dropbox/Philippe/Projets/vscode-corriger-extension
+cd /chemin/vers/vscode-corriger-extension
 npm install
 ```
 
