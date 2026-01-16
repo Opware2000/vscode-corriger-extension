@@ -45,23 +45,23 @@ export function detectExercises(content: string): Exercise[] {
 export function parseExerciseStructure(exerciseContent: string): ExerciseStructure {
     const structure: ExerciseStructure = {};
 
-    // Utiliser des groupes de capture nommés pour une meilleure lisibilité
+    // Extraire l'énoncé
     const enonceMatch = exerciseContent.match(/\\begin{enonce}([\s\S]*?)\\end{enonce}/);
     if (enonceMatch) {
         structure.enonce = enonceMatch[1].trim();
     }
 
+    // Extraire la correction
     const correctionMatch = exerciseContent.match(/\\begin{correction}([\s\S]*?)\\end{correction}/);
     if (correctionMatch) {
         structure.correction = correctionMatch[1].trim();
     }
 
-    // Calculer le contenu restant de manière plus efficace
+    // Calculer le contenu restant en supprimant les balises connues en une seule passe
     let cleanContent = exerciseContent
-        .replace(/\\begin{exercice}/, '')
-        .replace(/\\end{exercice}/, '')
-        .replace(/\\begin{enonce}[\s\S]*?\\end{enonce}/, '')
-        .replace(/\\begin{correction}[\s\S]*?\\end{correction}/, '')
+        .replace(/\\begin{exercice}|\\end{exercice}/g, '')
+        .replace(/\\begin{enonce}[\s\S]*?\\end{enonce}/g, '')
+        .replace(/\\begin{correction}[\s\S]*?\\end{correction}/g, '')
         .trim();
 
     if (cleanContent) {

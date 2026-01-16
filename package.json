@@ -17,8 +17,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "vscode-corriger-extension.helloWorld",
-        "title": "Hello World"
+        "command": "vscode-corriger-extension.detectExercises",
+        "title": "Détecter les exercices LaTeX"
       }
     ]
   },

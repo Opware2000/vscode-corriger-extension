@@ -19,7 +19,7 @@ suite('Extension E2E Tests', () => {
     });
 
     suite('Command Execution', () => {
-        test('[P0] should execute helloWorld command with valid LaTeX document', async () => {
+        test('[P0] should execute detectExercises command with valid LaTeX document', async () => {
             // GIVEN: Create a new document with LaTeX exercises
             const document = await vscode.workspace.openTextDocument({
                 content: createLatexDocumentWithExercises(2),
@@ -35,8 +35,8 @@ suite('Extension E2E Tests', () => {
                 return Promise.resolve(undefined as any);
             };
 
-            // WHEN: Execute the helloWorld command
-            await vscode.commands.executeCommand('vscode-corriger-extension.helloWorld');
+            // WHEN: Execute the detectExercises command
+            await vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
 
             // THEN: Information message shows correct exercise count
             assert.strictEqual(messageShown, '2 exercice(s) détecté(s) dans le document.');
@@ -45,7 +45,7 @@ suite('Extension E2E Tests', () => {
             vscode.window.showInformationMessage = originalShowInformationMessage;
         });
 
-        test('[P0] should execute helloWorld command with no exercises', async () => {
+        test('[P0] should execute detectExercises command with no exercises', async () => {
             // GIVEN: Create a document with no exercises
             const document = await vscode.workspace.openTextDocument({
                 content: '\\begin{document}\nContenu sans exercices\n\\end{document}',
@@ -62,7 +62,7 @@ suite('Extension E2E Tests', () => {
             };
 
             // WHEN: Execute the command
-            await vscode.commands.executeCommand('vscode-corriger-extension.helloWorld');
+            await vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
 
             // THEN: Shows no exercises message
             assert.strictEqual(messageShown, 'Aucun exercice détecté dans le document.');
@@ -88,7 +88,7 @@ suite('Extension E2E Tests', () => {
             };
 
             // WHEN: Execute the command
-            await vscode.commands.executeCommand('vscode-corriger-extension.helloWorld');
+            await vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
 
             // THEN: Shows no document message
             assert.strictEqual(messageShown, 'Aucun document ouvert ou document vide.');
@@ -134,7 +134,7 @@ Calculer $2 + 2$.
             };
 
             // WHEN: Execute the command
-            await vscode.commands.executeCommand('vscode-corriger-extension.helloWorld');
+            await vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
 
             // THEN: Detects both exercises
             assert.strictEqual(messageShown, '2 exercice(s) détecté(s) dans le document.');
@@ -161,7 +161,7 @@ Calculer $2 + 2$.
             };
 
             // WHEN: Execute the command
-            await vscode.commands.executeCommand('vscode-corriger-extension.helloWorld');
+            await vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
 
             // THEN: Correctly counts all exercises
             assert.strictEqual(messageShown, '50 exercice(s) détecté(s) dans le document.');
@@ -195,8 +195,8 @@ Calculer $2 + 2$.
             // WHEN: Check registered commands
             const commands = await vscode.commands.getCommands(true);
 
-            // THEN: helloWorld command should be registered
-            assert.ok(commands.includes('vscode-corriger-extension.helloWorld'));
+            // THEN: detectExercises command should be registered
+            assert.ok(commands.includes('vscode-corriger-extension.detectExercises'));
         });
     });
 });

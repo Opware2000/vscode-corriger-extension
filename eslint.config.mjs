@@ -18,10 +18,13 @@ export default [{
             selector: "import",
             format: ["camelCase", "PascalCase"],
         }],
+        "@typescript-eslint/no-unused-vars": "warn",
+        "@typescript-eslint/explicit-function-return-type": "off", // Désactivé pour les extensions VSCode
 
         curly: "warn",
         eqeqeq: "warn",
         "no-throw-literal": "warn",
         semi: "warn",
+        "no-console": ["warn", { allow: ["log", "error"] }], // Permettre console.log et console.error pour les extensions
     },
 }];
