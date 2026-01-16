@@ -1,21 +1,7 @@
-node_modules
+out
 dist
+node_modules
+.vscode-test/
 *.vsix
-.vscode-test
-*.log
-# KiloCode files
+_bmad/
 .kilocodemodes
-.kilocode
-# LaTeX intermediate files
-*.aux
-*.fdb_latexmk
-*.fls
-*.lof
-*.log
-*.out
-*.toc
-*.synctex.gz
-*.bbl
-*.blg
-_bmad
-plans
