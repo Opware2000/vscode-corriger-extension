@@ -9,7 +9,10 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:latex",
+    "onCommand:vscode-corriger-extension.detectExercises"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -29,21 +32,25 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
-    "test:e2e": "playwright test"
+    "test:unit": "vscode-test",
+    "test:e2e": "playwright test",
+    "test:all": "npm run test:unit && npm run test:e2e"
   },
   "devDependencies": {
-    "@types/vscode": "^1.108.1",
+    "@faker-js/faker": "^8.0.0",
+    "@playwright/test": "^1.40.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "typescript-eslint": "^8.52.0",
-    "eslint": "^9.39.2",
-    "typescript": "^5.9.3",
-    "ts-loader": "^9.5.4",
-    "webpack": "^5.104.1",
-    "webpack-cli": "^6.0.1",
+    "@types/sinon": "^21.0.0",
+    "@types/vscode": "^1.108.1",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
-    "@playwright/test": "^1.40.0",
-    "@faker-js/faker": "^8.0.0"
+    "eslint": "^9.39.2",
+    "sinon": "^21.0.1",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.52.0",
+    "webpack": "^5.104.1",
+    "webpack-cli": "^6.0.1"
   }
 }
