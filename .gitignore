@@ -17,3 +17,5 @@ dist
 *.synctex.gz
 *.bbl
 *.blg
+_bmad
+plans
