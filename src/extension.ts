@@ -166,6 +166,118 @@ async function corrigerTexte(texte: string, stream?: vscode.ChatResponseStream, 
     return resultat;
 }
 
+/**
+ * Valide la structure basique du LaTeX
+ * @returns true si la structure est valide, false sinon
+ */
+function validerStructureLaTeX(texte: string): boolean {
+    // Vérifications basiques de structure
+    const verificateurs = [
+        /\\begin\{exercice\}/,
+        /\\end\{exercice\}/,
+        /\\begin\{enonce\}/,
+        /\\end\{enonce\}/,
+        /\\begin\{correction\}/,
+        /\\end\{correction\}/
+    ];
+
+    // Au moins \begin{exercice} et \end{exercice} doivent être présents
+    const aDebut = texte.includes('\\begin{exercice}');
+    const aFin = texte.includes('\\end{exercice}');
+    const aEnonce = texte.includes('\\begin{enonce}') || texte.includes('\\begin{enonce}');
+    const aCorrection = texte.includes('\\begin{correction}') || texte.includes('\\begin{correction}');
+
+    // Vérifier que le nombre de \begin et \end correspond
+    const countDebutExercice = (texte.match(/\\begin\{exercice\}/g) || []).length;
+    const countFinExercice = (texte.match(/\\end\{exercice\}/g) || []).length;
+    const countDebutEnonce = (texte.match(/\\begin\{enonce\}/gi) || []).length;
+    const countFinEnonce = (texte.match(/\\end\{enonce\}/gi) || []).length;
+
+    const structureValide = aDebut && aFin &&
+        countDebutExercice === countFinExercice &&
+        countDebutEnonce === countFinEnonce &&
+        !texte.includes('x +') &&  // Détecter les corruptions fréquentes
+        !texte.includes('x --') &&
+        !texte.includes('dfrx');
+
+    return structureValide;
+}
+
+/**
+ * Écrit le résultat de manière atomique avec vérification d'intégrité
+ * @returns true si l'écriture a réussi, false sinon
+ */
+async function ecrireCorrectionAtomique(
+    editor: vscode.TextEditor,
+    resultat: string
+): Promise<boolean> {
+    const document = editor.document;
+    const contenuInitial = document.getText();
+
+    try {
+        // Calculer la plage complète du document
+        const fullRange = new vscode.Range(
+            document.positionAt(0),
+            document.positionAt(contenuInitial.length)
+        );
+
+        // Effectuer l'édition de manière atomique
+        await editor.edit(editBuilder => {
+            editBuilder.replace(fullRange, resultat);
+        });
+
+        // Vérifier l'intégrité après écriture
+        const contenuApres = editor.document.getText();
+
+        // Vérifier que le contenu a bien changé
+        if (contenuApres === contenuInitial) {
+            console.error('[ATOMIC] Écriture n\'a pas modifié le document');
+            return false;
+        }
+
+        // Vérifier la structure LaTeX
+        if (!validerStructureLaTeX(contenuApres)) {
+            console.error('[ATOMIC] Structure LaTeX invalide après écriture');
+            console.error('[ATOMIC] Contenu après:', contenuApres.substring(0, 200));
+            return false;
+        }
+
+        // Vérifier que le résultat attendu est présent
+        if (!contenuApres.includes('\\begin{correction}') && !contenuApres.includes('\\begin{correction}')) {
+            console.error('[ATOMIC] Correction non trouvée dans le document après écriture');
+            return false;
+        }
+
+        console.log('[ATOMIC] Écriture atomique réussie');
+        return true;
+
+    } catch (error) {
+        console.error('[ATOMIC] Erreur lors de l\'écriture atomique:', error);
+        return false;
+    }
+}
+
+/**
+ * Restaure le document à son état initial
+ */
+async function restaurerDocument(editor: vscode.TextEditor, contenuInitial: string): Promise<void> {
+    try {
+        const document = editor.document;
+        const fullRange = new vscode.Range(
+            document.positionAt(0),
+            document.positionAt(document.getText().length)
+        );
+
+        await editor.edit(editBuilder => {
+            editBuilder.replace(fullRange, contenuInitial);
+        });
+
+        console.log('[RESTORE] Document restauré à son état initial');
+    } catch (error) {
+        console.error('[RESTORE] Erreur lors de la restauration:', error);
+    }
+}
+
 export function activate(context: vscode.ExtensionContext) {
 
     // Commande pour corriger le document actif
@@ -193,17 +305,27 @@ export function activate(context: vscode.ExtensionContext) {
                 cancellable: false
             }, async (progress) => {
                 try {
+                    // Sauvegarder l'état initial du document
+                    const contenuInitial = document.getText();
+                    console.log('[DEBUG] Longueur du document avant:', contenuInitial.length);
+
                     const resultat = await corrigerTexte(texte, undefined, undefined);
 
-                    // Remplacer tout le contenu du document
-                    const fullRange = new vscode.Range(
-                        document.positionAt(0),
-                        document.positionAt(document.getText().length)
-                    );
+                    console.log('[DEBUG] Longueur du résultat:', resultat.length);
 
-                    await editor.edit(editBuilder => {
-                        editBuilder.replace(fullRange, resultat);
-                    });
+                    // Vérifier la structure avant d'écrire
+                    if (!validerStructureLaTeX(resultat)) {
+                        throw new Error('La correction générée a une structure LaTeX invalide');
+                    }
+
+                    // Écriture atomique avec vérification
+                    const succes = await ecrireCorrectionAtomique(editor, resultat);
+
+                    if (!succes) {
+                        // Restaurer l'état initial en cas d'échec
+                        await restaurerDocument(editor, contenuInitial);
+                        throw new Error('Échec de l\'écriture - document restauré');
+                    }
 
                     vscode.window.showInformationMessage('✅ Document corrigé avec succès !');
                 } catch (err) {
@@ -250,7 +372,37 @@ export function activate(context: vscode.ExtensionContext) {
                     }
                 }
 
-                await corrigerTexte(texteACorriger, stream, token);
+                const resultat = await corrigerTexte(texteACorriger, stream, token);
+
+                console.log('[DEBUG] Résultat longueur:', resultat.length);
+
+                // Écrire le résultat dans le fichier LaTeX
+                const editor = vscode.window.activeTextEditor;
+                if (editor && editor.document.fileName.endsWith('.tex')) {
+                    const document = editor.document;
+                    const contenuInitial = document.getText();
+
+                    console.log('[DEBUG] Document longueur avant:', contenuInitial.length);
+
+                    // Vérifier la structure avant d'écrire
+                    if (!validerStructureLaTeX(resultat)) {
+                        stream.markdown('\n\n⚠️ **Avertissement** : La correction générée semble avoir une structure invalide.\n');
+                        // On continue quand même, l'utilisateur décidera
+                    }
+
+                    // Écriture atomique avec vérification
+                    const succes = await ecrireCorrectionAtomique(editor, resultat);
+
+                    if (succes) {
+                        stream.markdown('\n\n✅ Correction écrite dans le fichier !\n');
+                    } else {
+                        // Restaurer l'état initial en cas d'échec
+                        await restaurerDocument(editor, contenuInitial);
+                        stream.markdown('\n\n❌ **Erreur** : L\'écriture a échoué et le document a été restauré.\n');
+                    }
+                } else {
+                    stream.markdown('\n\n⚠️ Aucun fichier LaTeX actif. Voici la correction :\n\n```latex\n' + resultat + '\n```\n');
+                }
 
             } catch (err) {
                 if (err instanceof vscode.LanguageModelError) {
