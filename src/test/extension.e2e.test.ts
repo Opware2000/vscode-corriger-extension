@@ -1,6 +1,8 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as sinon from 'sinon';
+import { MESSAGES } from '../constants';
 
 // Test data factories for E2E tests
 const createLatexDocumentWithExercises = (count: number, overrides: string[] = []): string => {
@@ -13,36 +15,41 @@ const createLatexDocumentWithExercises = (count: number, overrides: string[] = [
 };
 
 suite('Extension E2E Tests', () => {
-    suiteSetup(async () => {
-        // Wait for extension to be activated
-        await vscode.extensions.getExtension('vscode-corriger-extension')?.activate();
-    });
+	let sandbox: sinon.SinonSandbox;
+
+	suiteSetup(async () => {
+		// Wait for extension to be activated
+		await vscode.extensions.getExtension('vscode-corriger-extension')?.activate();
+		sandbox = sinon.createSandbox();
+	});
+
+	suiteTeardown(() => {
+		sandbox.restore();
+	});
 
     suite('Command Execution', () => {
         test('[P0] should execute detectExercises command with valid LaTeX document', async () => {
-            // GIVEN: Create a new document with LaTeX exercises
-            const document = await vscode.workspace.openTextDocument({
-                content: createLatexDocumentWithExercises(2),
-                language: 'latex'
-            });
-            await vscode.window.showTextDocument(document);
+        	// GIVEN: Create a new document with LaTeX exercises
+        	const document = await vscode.workspace.openTextDocument({
+        		content: createLatexDocumentWithExercises(2),
+        		language: 'latex'
+        	});
+        	await vscode.window.showTextDocument(document);
 
-            // Mock the information message to capture it
-            let messageShown = '';
-            const originalShowInformationMessage = vscode.window.showInformationMessage;
-            vscode.window.showInformationMessage = (message: string) => {
-                messageShown = message;
-                return Promise.resolve(undefined as any);
-            };
+        	// Mock the information message to capture it
+        	let messageShown = '';
+        	sandbox.restore();
+        	sandbox = sinon.createSandbox();
+        	sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
+        		messageShown = message;
+        		return Promise.resolve(undefined as any);
+        	});
 
-            // WHEN: Execute the detectExercises command
-            await vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
+        	// WHEN: Execute the detectExercises command
+        	vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
 
-            // THEN: Information message shows correct exercise count
-            assert.strictEqual(messageShown, '2 exercice(s) détecté(s) dans le document.');
-
-            // Restore original function
-            vscode.window.showInformationMessage = originalShowInformationMessage;
+        	// THEN: Information message shows correct exercise count
+        	assert.strictEqual(messageShown, MESSAGES.EXERCISES_DETECTED(2));
         });
 
         test('[P0] should execute detectExercises command with no exercises', async () => {
@@ -62,7 +69,7 @@ suite('Extension E2E Tests', () => {
             };
 
             // WHEN: Execute the command
-            await vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
+            vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
 
             // THEN: Shows no exercises message
             assert.strictEqual(messageShown, 'Aucun exercice détecté dans le document.');
@@ -88,7 +95,7 @@ suite('Extension E2E Tests', () => {
             };
 
             // WHEN: Execute the command
-            await vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
+            vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
 
             // THEN: Shows no document message
             assert.strictEqual(messageShown, 'Aucun document ouvert ou document vide.');
@@ -98,8 +105,8 @@ suite('Extension E2E Tests', () => {
         });
 
         test('[P1] should handle complex LaTeX structure with nested exercises', async () => {
-            // GIVEN: Document with complex nested structure
-            const complexContent = `
+        	// GIVEN: Document with complex nested structure
+        	const complexContent = `
 \\begin{document}
 \\begin{exercice}
 \\begin{enonce}
@@ -119,55 +126,51 @@ Calculer $2 + 2$.
 \\end{exercice}
 \\end{document}
 `;
-            const document = await vscode.workspace.openTextDocument({
-                content: complexContent,
-                language: 'latex'
-            });
-            await vscode.window.showTextDocument(document);
+        	const document = await vscode.workspace.openTextDocument({
+        		content: complexContent,
+        		language: 'latex'
+        	});
+        	await vscode.window.showTextDocument(document);
 
-            // Mock the information message
-            let messageShown = '';
-            const originalShowInformationMessage = vscode.window.showInformationMessage;
-            vscode.window.showInformationMessage = (message: string) => {
-                messageShown = message;
-                return Promise.resolve(undefined as any);
-            };
+        	// Mock the information message
+        	let messageShown = '';
+        	sandbox.restore();
+        	sandbox = sinon.createSandbox();
+        	sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
+        		messageShown = message;
+        		return Promise.resolve(undefined as any);
+        	});
 
-            // WHEN: Execute the command
-            await vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
+        	// WHEN: Execute the command
+        	vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
 
-            // THEN: Detects both exercises
-            assert.strictEqual(messageShown, '2 exercice(s) détecté(s) dans le document.');
-
-            // Restore original function
-            vscode.window.showInformationMessage = originalShowInformationMessage;
+        	// THEN: Detects both exercises
+        	assert.strictEqual(messageShown, MESSAGES.EXERCISES_DETECTED(2));
         });
 
         test('[P2] should handle large documents with many exercises', async () => {
-            // GIVEN: Large document with 50 exercises
-            const largeContent = createLatexDocumentWithExercises(50);
-            const document = await vscode.workspace.openTextDocument({
-                content: largeContent,
-                language: 'latex'
-            });
-            await vscode.window.showTextDocument(document);
+        	// GIVEN: Large document with 50 exercises
+        	const largeContent = createLatexDocumentWithExercises(50);
+        	const document = await vscode.workspace.openTextDocument({
+        		content: largeContent,
+        		language: 'latex'
+        	});
+        	await vscode.window.showTextDocument(document);
 
-            // Mock the information message
-            let messageShown = '';
-            const originalShowInformationMessage = vscode.window.showInformationMessage;
-            vscode.window.showInformationMessage = (message: string) => {
-                messageShown = message;
-                return Promise.resolve(undefined as any);
-            };
+        	// Mock the information message
+        	let messageShown = '';
+        	sandbox.restore();
+        	sandbox = sinon.createSandbox();
+        	sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
+        		messageShown = message;
+        		return Promise.resolve(undefined as any);
+        	});
 
-            // WHEN: Execute the command
-            await vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
+        	// WHEN: Execute the command
+        	vscode.commands.executeCommand('vscode-corriger-extension.detectExercises');
 
-            // THEN: Correctly counts all exercises
-            assert.strictEqual(messageShown, '50 exercice(s) détecté(s) dans le document.');
-
-            // Restore original function
-            vscode.window.showInformationMessage = originalShowInformationMessage;
+        	// THEN: Correctly counts all exercises
+        	assert.strictEqual(messageShown, MESSAGES.EXERCISES_DETECTED(50));
         });
     });
 

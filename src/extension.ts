@@ -3,6 +3,8 @@
 import * as vscode from 'vscode';
 import { getActiveDocumentContent } from './document-access';
 import { detectExercises } from './latex-parser';
+import { selectExercise, clearExerciseHighlights } from './exercise-selector';
+import { MESSAGES } from './constants';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -15,12 +17,15 @@ export function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('vscode-corriger-extension.detectExercises', () => {
+	const disposable = vscode.commands.registerCommand('vscode-corriger-extension.detectExercises', async () => {
+		// Effacer les anciennes mises en surbrillance
+		clearExerciseHighlights();
+
 		// Récupérer le contenu du document actif
 		const content = getActiveDocumentContent();
 
 		if (!content) {
-			vscode.window.showInformationMessage('Aucun document ouvert ou document vide.');
+			vscode.window.showInformationMessage(MESSAGES.NO_DOCUMENT);
 			return;
 		}
 
@@ -28,16 +33,24 @@ export function activate(context: vscode.ExtensionContext) {
 		const exercises = detectExercises(content);
 
 		if (exercises.length === 0) {
-			vscode.window.showInformationMessage('Aucun exercice détecté dans le document.');
+			vscode.window.showInformationMessage(MESSAGES.NO_EXERCISES_FOUND);
 			return;
 		}
 
 		// Afficher le nombre d'exercices détectés
-		const message = `${exercises.length} exercice(s) détecté(s) dans le document.`;
+		const message = MESSAGES.EXERCISES_DETECTED(exercises.length);
 		vscode.window.showInformationMessage(message);
 
 		// Afficher les détails dans la console
 		console.log('Exercices détectés:', exercises);
+
+		// Permettre la sélection d'un exercice
+		selectExercise(exercises).then(selectedExercise => {
+			if (selectedExercise) {
+				vscode.window.showInformationMessage(MESSAGES.EXERCISE_SELECTED(selectedExercise.number));
+				console.log('Exercice sélectionné:', selectedExercise);
+			}
+		});
 	});
 
 	context.subscriptions.push(disposable);

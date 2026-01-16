@@ -6,6 +6,7 @@ import * as vscode from 'vscode';
 import * as sinon from 'sinon';
 import { getActiveDocumentContent } from '../document-access';
 import { detectExercises, parseExerciseStructure, Exercise, ExerciseStructure } from '../latex-parser';
+import { selectExercise, highlightExercise, clearExerciseHighlights } from '../exercise-selector';
 
 // Test data factories
 const createLatexWithExercises = (count: number, overrides: string[] = []): string => {
@@ -92,6 +93,7 @@ suite('Extension Test Suite', () => {
 			// THEN: Returns array with one exercise
 			assert.ok(Array.isArray(exercises));
 			assert.strictEqual(exercises.length, 1);
+			assert.strictEqual(exercises[0].number, 1);
 			assert.strictEqual(typeof exercises[0].start, 'number');
 			assert.strictEqual(typeof exercises[0].end, 'number');
 			assert.ok(exercises[0].content.includes('\\begin{exercice}'));
@@ -109,6 +111,7 @@ suite('Extension Test Suite', () => {
 			assert.ok(Array.isArray(exercises));
 			assert.strictEqual(exercises.length, 3);
 			exercises.forEach((exercise: Exercise, index: number) => {
+				assert.strictEqual(exercise.number, index + 1);
 				assert.strictEqual(typeof exercise.start, 'number');
 				assert.strictEqual(typeof exercise.end, 'number');
 				assert.ok(exercise.content.includes(`Contenu de l'exercice ${index + 1}`));
@@ -204,8 +207,23 @@ Du texte après
 			// THEN: Detects all exercises correctly
 			assert.strictEqual(exercises.length, 100);
 			exercises.forEach((exercise: Exercise, index: number) => {
+				assert.strictEqual(exercise.number, index + 1);
 				assert.ok(exercise.content.includes(`Contenu de l'exercice ${index + 1}`));
 			});
+		});
+
+		test('[P3] should handle very large documents efficiently', () => {
+			// GIVEN: Very large document with 1000 exercises
+			const veryLargeContent = createLatexWithExercises(1000);
+
+			// WHEN: Detecting exercises
+			const startTime = Date.now();
+			const exercises = detectExercises(veryLargeContent);
+			const endTime = Date.now();
+
+			// THEN: Detects all exercises and completes within reasonable time (< 1 second)
+			assert.strictEqual(exercises.length, 1000);
+			assert.ok(endTime - startTime < 1000, `Detection took ${endTime - startTime}ms, should be < 1000ms`);
 		});
 
 		test('[P3] should handle deeply nested malformed structures', () => {
@@ -238,6 +256,54 @@ Exercice imbriqué
 			// THEN: Detects the exercise correctly
 			assert.strictEqual(exercises.length, 1);
 			assert.ok(exercises[0].content.includes('.*+?^${}()|[]\\\\'));
+		});
+
+		test('[P2] should generate titles from enonce content', () => {
+			// GIVEN: Exercise with enonce
+			const content = `\\begin{exercice}
+\\begin{enonce}
+Résoudre l'équation
+\\end{enonce}
+\\end{exercice}`;
+
+			// WHEN: Detecting exercises
+			const exercises = detectExercises(content);
+
+			// THEN: Title is extracted from enonce
+			assert.strictEqual(exercises.length, 1);
+			assert.strictEqual(exercises[0].title, 'Résoudre l\'équation');
+		});
+
+		test('[P2] should generate default title when no enonce', () => {
+			// GIVEN: Exercise without enonce
+			const content = `\\begin{exercice}
+Contenu sans enonce
+\\end{exercice}`;
+
+			// WHEN: Detecting exercises
+			const exercises = detectExercises(content);
+
+			// THEN: Default title is used
+			assert.strictEqual(exercises.length, 1);
+			assert.strictEqual(exercises[0].title, 'Exercice 1');
+		});
+
+		test('[P2] should truncate long enonce titles', () => {
+			// GIVEN: Exercise with long enonce
+			const longEnonce = 'A'.repeat(60);
+			const content = `\\begin{exercice}
+\\begin{enonce}
+${longEnonce}
+\\end{enonce}
+\\end{exercice}`;
+
+			// WHEN: Detecting exercises
+			const exercises = detectExercises(content);
+
+			// THEN: Title is truncated
+			assert.strictEqual(exercises.length, 1);
+			assert.ok(exercises[0].title!.endsWith('...'));
+			assert.strictEqual(exercises[0].title!.length, 53); // 50 + '...'
 		});
 	});
 
@@ -374,6 +440,132 @@ Contenu restant
 			assert.ok(structure);
 			assert.strictEqual(structure.enonce, 'Énoncé valide');
 			assert.strictEqual(structure.otherContent, '\\begin{correction}\nCorrection sans fin\nContenu restant');
+		});
+	});
+
+	suite('selectExercise', () => {
+		let sandbox: sinon.SinonSandbox;
+
+		suiteSetup(() => {
+			sandbox = sinon.createSandbox();
+		});
+
+		suiteTeardown(() => {
+			sandbox.restore();
+		});
+
+		test('[P1] should return selected exercise when user selects one', async () => {
+			// GIVEN: Mock exercises and QuickPick selection
+			const exercises: Exercise[] = [
+				{ number: 1, start: 0, end: 10, content: 'ex1', title: 'Ex1' },
+				{ number: 2, start: 11, end: 20, content: 'ex2', title: 'Ex2' }
+			];
+			const mockQuickPickItem = {
+				label: 'Exercice 1',
+				description: 'Ex1',
+				detail: 'Lignes 0-10',
+				exercise: exercises[0]
+			};
+			sandbox.stub(vscode.window, 'showQuickPick').resolves(mockQuickPickItem);
+
+			// WHEN: Selecting exercise
+			const selected = await selectExercise(exercises);
+
+			// THEN: Returns the first exercise
+			assert.ok(selected);
+			assert.strictEqual(selected.number, 1);
+			assert.strictEqual(selected.content, 'ex1');
+		});
+
+		test('[P1] should show information message when no exercises provided', async () => {
+			// GIVEN: No exercises
+			const exercises: Exercise[] = [];
+			const showInfoStub = sandbox.stub(vscode.window, 'showInformationMessage');
+
+			// WHEN: Selecting exercise
+			const selected = await selectExercise(exercises);
+
+			// THEN: Shows message and returns undefined
+			assert.ok(showInfoStub.calledOnce);
+			assert.strictEqual(selected, undefined);
+		});
+	});
+
+	suite('highlightExercise', () => {
+		let sandbox: sinon.SinonSandbox;
+
+		suiteSetup(() => {
+			sandbox = sinon.createSandbox();
+		});
+
+		suiteTeardown(() => {
+			sandbox.restore();
+		});
+
+		test('[P2] should highlight exercise when active editor exists', () => {
+			// GIVEN: Mock active editor and exercise
+			const mockDocument = {
+				positionAt: sandbox.stub().callsFake((offset: number) => ({ line: offset, character: 0 }))
+			};
+			const mockEditor = {
+				document: mockDocument,
+				setDecorations: sandbox.stub()
+			};
+			sandbox.stub(vscode.window, 'activeTextEditor').value(mockEditor);
+			const exercise: Exercise = { number: 1, start: 10, end: 20, content: 'test', title: 'Test' };
+
+			// WHEN: Highlighting exercise
+			highlightExercise(exercise);
+
+			// THEN: Sets decorations on editor
+			assert.ok(mockEditor.setDecorations.calledOnce);
+		});
+
+		test('[P2] should do nothing when no active editor exists', () => {
+			// GIVEN: No active editor
+			sandbox.stub(vscode.window, 'activeTextEditor').value(undefined);
+			const exercise: Exercise = { number: 1, start: 10, end: 20, content: 'test', title: 'Test' };
+
+			// WHEN: Highlighting exercise
+			highlightExercise(exercise);
+
+			// THEN: No decorations set
+		});
+	});
+
+	suite('clearExerciseHighlights', () => {
+		let sandbox: sinon.SinonSandbox;
+
+		suiteSetup(() => {
+			sandbox = sinon.createSandbox();
+		});
+
+		suiteTeardown(() => {
+			sandbox.restore();
+		});
+
+		test('[P2] should clear highlights when active editor exists', () => {
+			// GIVEN: Mock active editor
+			const mockEditor = {
+				setDecorations: sandbox.stub()
+			};
+			sandbox.stub(vscode.window, 'activeTextEditor').value(mockEditor);
+
+			// WHEN: Clearing highlights
+			clearExerciseHighlights();
+
+			// THEN: Sets decorations with empty array
+			assert.ok(mockEditor.setDecorations.calledOnce);
+		});
+
+		test('[P2] should do nothing when no active editor exists', () => {
+			// GIVEN: No active editor
+			sandbox.stub(vscode.window, 'activeTextEditor').value(undefined);
+
+			// WHEN: Clearing highlights
+			clearExerciseHighlights();
+
+			// THEN: No decorations set
 		});
 	});
 
