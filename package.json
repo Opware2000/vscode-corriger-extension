@@ -32,9 +32,9 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
-    "test:unit": "vscode-test",
+    "test:unit": "vscode-test --label unit",
     "test:e2e": "vscode-test --label e2e",
-    "test:integration": "vscode-test --label integration",
+    "test:integration": "playwright test",
     "test:all": "npm run test:unit && npm run test:e2e"
   },
   "devDependencies": {
