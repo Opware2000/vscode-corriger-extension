@@ -92,7 +92,7 @@ Si l'exercice contient déjà une section non vide \`\\begin{correction} ... \\e
 5. Inclure les diagrammes TikZ si nécessaire
 6. Formater selon le format de sortie requis`;
 
-async function corrigerTexte(texte: string, stream?: vscode.ChatResponseStream): Promise<string> {
+async function corrigerTexte(texte: string, stream?: vscode.ChatResponseStream, token?: vscode.CancellationToken): Promise<string> {
     // Construire le prompt avec les instructions
     const messages = [
         vscode.LanguageModelChatMessage.User(CORRECTION_INSTRUCTIONS),
@@ -115,8 +115,8 @@ async function corrigerTexte(texte: string, stream?: vscode.ChatResponseStream):
         throw new Error(errorMsg);
     }
 
-    // Envoyer la requête
-    const chatResponse = await model.sendRequest(messages, {});
+    // Envoyer la requête avec gestion du token d'annulation
+    const chatResponse = await model.sendRequest(messages, {}, token);
 
     // Collecter la réponse
     let resultat = '';
@@ -127,11 +127,20 @@ async function corrigerTexte(texte: string, stream?: vscode.ChatResponseStream):
         }
     }
 
+    // Valider que la réponse n'est pas vide
+    if (!resultat || resultat.trim() === '') {
+        const errorMsg = 'Le modèle n\'a pas généré de correction.';
+        if (stream) {
+            stream.markdown(`❌ ${errorMsg}`);
+        }
+        throw new Error(errorMsg);
+    }
+
     return resultat;
 }
 
 export function activate(context: vscode.ExtensionContext) {
-    
+
     // Commande pour corriger le document actif
     const corrigerDocumentCmd = vscode.commands.registerCommand(
         'corriger-latex.corrigerDocument',
@@ -148,26 +157,27 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            const texte = document.getText();
-            
+            const selection = editor.selection;
+            const texte = selection.isEmpty ? document.getText() : document.getText(selection);
+
             await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: 'Correction en cours...',
                 cancellable: false
             }, async (progress) => {
                 try {
-                    const resultat = await corrigerTexte(texte);
-                    
+                    const resultat = await corrigerTexte(texte, undefined, undefined);
+
                     // Remplacer tout le contenu du document
                     const fullRange = new vscode.Range(
                         document.positionAt(0),
-                        document.positionAt(texte.length)
+                        document.positionAt(document.getText().length)
                     );
-                    
+
                     await editor.edit(editBuilder => {
                         editBuilder.replace(fullRange, resultat);
                     });
-                    
+
                     vscode.window.showInformationMessage('✅ Document corrigé avec succès !');
                 } catch (err) {
                     if (err instanceof vscode.LanguageModelError) {
@@ -193,20 +203,27 @@ export function activate(context: vscode.ExtensionContext) {
         ) => {
             try {
                 // Si la commande est vide, utiliser le document actif
-                let texteACorreiger = request.prompt;
-                
-                if (!texteACorreiger || texteACorreiger.trim() === '') {
+                let texteACorriger = request.prompt;
+
+                if (!texteACorriger || texteACorriger.trim() === '') {
                     const editor = vscode.window.activeTextEditor;
                     if (editor && editor.document.fileName.endsWith('.tex')) {
-                        texteACorreiger = editor.document.getText();
-                        stream.markdown('📄 *Correction du document actif...*\n\n');
+                        const selection = editor.selection;
+                        const isSelection = !selection.isEmpty;
+                        texteACorriger = isSelection ? editor.document.getText(selection) : editor.document.getText();
+
+                        if (isSelection) {
+                            stream.markdown('📄 *Correction de la sélection active dans le document LaTeX...*\n\n');
+                        } else {
+                            stream.markdown('📄 *Correction du document LaTeX actif...*\n\n');
+                        }
                     } else {
                         stream.markdown('ℹ️ Veuillez fournir un exercice à corriger ou ouvrir un fichier LaTeX.');
                         return;
                     }
                 }
 
-                await corrigerTexte(texteACorreiger, stream)
+                await corrigerTexte(texteACorriger, stream)
 
             } catch (err) {
                 if (err instanceof vscode.LanguageModelError) {
@@ -226,4 +243,4 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(corriger, corrigerDocumentCmd);
 }
 
-export function deactivate() {}
+export function deactivate() { }
