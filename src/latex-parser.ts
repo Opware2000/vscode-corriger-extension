@@ -55,7 +55,7 @@ export function detectExercises(content: string): Exercise[] {
 
         // Validation des positions
         if (start < 0 || end <= start || end > content.length) {
-            // Positions invalides, passer à l'exercice suivant
+            console.log(`Positions invalides pour l'exercice ${exerciseNumber}: start=${start}, end=${end}`);
             index = beginIndex + 1;
             continue;
         }
