@@ -1,6 +1,6 @@
 # VSCode Corriger Extension
 
-Extension VSCode pour la correction automatique d'exercices LaTeX utilisant l'IA OpenAI.
+Extension VSCode pour la correction automatique d'exercices LaTeX utilisant l'IA (OpenAI ou GitHub Copilot).
 
 ## Fonctionnalités
 
@@ -8,7 +8,7 @@ Cette extension permet de :
 
 - **Détecter automatiquement les exercices** dans les documents LaTeX utilisant les balises `\begin{exercice}` et `\end{exercice}`
 - **Sélectionner un exercice** à corriger via une interface interactive
-- **Générer des corrections pédagogiques** complètes et détaillées en français avec OpenAI GPT-4
+- **Générer des corrections pédagogiques** complètes et détaillées en français avec OpenAI GPT-4 ou GitHub Copilot
 - **Prévisualiser les corrections** avant insertion avec option de régénération
 - **Insérer automatiquement** les corrections dans le document
 - **Mettre en surbrillance** les exercices détectés dans l'éditeur
@@ -22,7 +22,7 @@ Cette extension permet de :
 ## Prérequis
 
 - **VSCode** version 1.108.1 ou supérieure
-- **Clé API OpenAI** valide (GPT-4 recommandé)
+- **Clé API OpenAI** valide (GPT-4 recommandé) ou **GitHub Copilot** activé
 - Documents en format LaTeX avec des exercices structurés
 
 ## Installation
@@ -65,6 +65,7 @@ L'extension propose plusieurs paramètres configurables :
 - **Type** : `string`
 - **Défaut** : `""`
 - **Description** : Clé API OpenAI pour la génération de corrections
+- **⚠️ Sécurité** : Cette clé API est stockée en clair dans les paramètres VSCode. Pour une sécurité optimale, considérez l'utilisation de variables d'environnement ou de services de gestion de secrets. Évitez de partager votre configuration contenant cette clé.
 
 ### `vscode-corriger-extension.openaiModel`
 - **Type** : `string`
@@ -86,6 +87,12 @@ L'extension propose plusieurs paramètres configurables :
 - **Type** : `number`
 - **Défaut** : `50`
 - **Description** : Taille maximale du cache des corrections
+
+### `vscode-corriger-extension.aiProvider`
+- **Type** : `string`
+- **Options** : `"openai"`, `"copilot"`
+- **Défaut** : `"openai"`
+- **Description** : Fournisseur d'IA à utiliser pour la génération de corrections. Copilot est recommandé pour une meilleure sécurité car il utilise l'abonnement GitHub Copilot de l'utilisateur sans clé API externe.
 
 ### `vscode-corriger-extension.enableCache`
 - **Type** : `boolean`

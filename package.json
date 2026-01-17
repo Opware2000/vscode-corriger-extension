@@ -101,6 +101,15 @@
           "type": "number",
           "default": 50,
           "description": "Taille maximale du cache des corrections"
+        },
+        "vscode-corriger-extension.aiProvider": {
+          "type": "string",
+          "enum": [
+            "openai",
+            "copilot"
+          ],
+          "default": "openai",
+          "description": "Fournisseur d'IA à utiliser pour la génération de corrections (Copilot est plus sécurisé car il n'utilise pas de clé API externe)"
         }
       }
     }
