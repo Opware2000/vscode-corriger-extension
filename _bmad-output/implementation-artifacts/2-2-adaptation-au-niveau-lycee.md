@@ -88,11 +88,13 @@ x-ai/grok-code-fast-1
 - Implémentation de generatePedagogicalPrompt avec instructions françaises complètes
 - Ajout de constantes pour notations et vocabulaire mathématiques français
 - Modification de generateCorrection pour utiliser le nouveau prompt pédagogique
-- Tests unitaires ajoutés pour valider la génération du prompt français
+- Ajout de configuration personnalisable du prompt pédagogique dans package.json
+- Tests unitaires ajoutés pour valider la génération du prompt français et la configuration
 - Toutes les sous-tâches terminées avec tests passant
 
 ### File List
 
+- package.json (modifié)
 - src/correction-generator.ts (modifié)
 - src/constants.ts (modifié)
 - src/test/extension.test.ts (modifié)
