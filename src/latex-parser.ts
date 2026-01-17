@@ -327,25 +327,8 @@ export function generateNextNumber(structure: DocumentStructure, type: 'section'
  * @returns La correction formatée avec environnements LaTeX appropriés
  */
 export function formatCorrectionWithLatexEnvironments(
-    correctionContent: string,
-    documentStructure: DocumentStructure
+    correctionContent: string
 ): string {
-    // Pour l'instant, on garde le format simple mais on peut l'étendre
-    // pour inclure des environnements align, equation, etc. selon le contenu
-
-    let formattedCorrection = correctionContent;
-
-    // Détecter et remplacer les expressions mathématiques simples
-    // par des environnements LaTeX appropriés
-    if (correctionContent.includes('$$') || correctionContent.includes('\\[')) {
-        // Le contenu contient déjà des maths - on le laisse tel quel
-    } else if (correctionContent.includes('=')) {
-        // Potentiellement une équation - on peut l'encadrer
-        formattedCorrection = formattedCorrection.replace(
-            /(\$\$[^\$]+\$\$)/g,
-            '\\begin{equation*}\n$1\n\\end{equation*}'
-        );
-    }
-
-    return `\\begin{correction}\n${formattedCorrection}\n\\end{correction}`;
+    // Formatage basique des corrections avec environnement LaTeX
+    return `\\begin{correction}\n${correctionContent}\n\\end{correction}`;
 }

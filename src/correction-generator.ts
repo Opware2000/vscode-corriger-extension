@@ -17,19 +17,34 @@ import { getConfig } from './config';
  * // Retourne un prompt détaillé avec vocabulaire mathématique français
  * ```
  */
-export function generatePedagogicalPrompt(exerciseContent: string): string {
+export function generatePedagogicalPrompt(exerciseContent: string, documentStructure?: import('./latex-parser').DocumentStructure): string {
     const config = vscode.workspace.getConfiguration('vscode-corriger-extension');
     const template = config.get('pedagogicalPrompt', '') as string;
 
     if (template && template.trim()) {
         // Replace the placeholder with actual exercise content
-        return template.replace('{{exerciseContent}}', exerciseContent);
+        let prompt = template.replace('{{exerciseContent}}', exerciseContent);
+
+        // Add document structure context if available
+        if (documentStructure) {
+            const contextInfo = generateDocumentContext(documentStructure);
+            prompt = prompt.replace('{{documentContext}}', contextInfo);
+        } else {
+            prompt = prompt.replace('{{documentContext}}', '');
+        }
+
+        return prompt;
     }
 
     // Fallback to default prompt if configuration is empty
+    let contextInfo = '';
+    if (documentStructure) {
+        contextInfo = `\n\nContexte du document :\n${generateDocumentContext(documentStructure)}`;
+    }
+
     return `Vous êtes un professeur de mathématiques expérimenté enseignant en France. Voici un exercice LaTeX du programme français de mathématiques :
 
-${exerciseContent}
+${exerciseContent}${contextInfo}
 
 Générez une correction pédagogique complète et détaillée en français, adaptée au niveau lycée. La correction doit :
 
@@ -58,6 +73,31 @@ Générez une correction pédagogique complète et détaillée en français, ada
 - Fournir des exemples concrets quand cela aide la compréhension
 
 Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans balises \\begin{correction} ou \\end{correction}.`;
+}
+
+/**
+ * Génère un contexte du document pour enrichir les prompts IA
+ */
+function generateDocumentContext(documentStructure: import('./latex-parser').DocumentStructure): string {
+    let context = '';
+
+    if (documentStructure.sections.length > 0) {
+        context += `Sections présentes : ${documentStructure.sections.map(s => `${s.type} ${s.number}: ${s.title || 'sans titre'}`).join(', ')}\n`;
+    }
+
+    if (documentStructure.theorems.length > 0) {
+        context += `Théorèmes/définitions : ${documentStructure.theorems.map(t => `${t.type} ${t.number}: ${t.title || 'sans titre'}`).join(', ')}\n`;
+    }
+
+    if (documentStructure.currentSection) {
+        context += `Numérotation actuelle - Section: ${documentStructure.currentSection}\n`;
+    }
+
+    if (documentStructure.currentTheorem) {
+        context += `Numérotation actuelle - Théorème: ${documentStructure.currentTheorem}\n`;
+    }
+
+    return context.trim();
 }
 
 /**
@@ -90,7 +130,7 @@ export async function generateCorrection(
                 throw new Error(MESSAGES.COPILOT_UNAVAILABLE);
             }
 
-            const prompt = generatePedagogicalPrompt(exerciseContent);
+            const prompt = generatePedagogicalPrompt(exerciseContent, documentStructure);
 
             const messages = [vscode.LanguageModelChatMessage.User(prompt)];
             const timeout = getConfig('copilotTimeout', 30000);
@@ -106,12 +146,8 @@ export async function generateCorrection(
 
         logger.info('Correction générée avec succès');
 
-        // Formater avec environnements LaTeX appropriés si structure disponible
-        if (documentStructure) {
-            return formatCorrectionWithLatexEnvironments(correction.trim(), documentStructure);
-        } else {
-            return `\\begin{correction}\n${correction.trim()}\n\\end{correction}`;
-        }
+        // Formater avec environnement LaTeX basique
+        return formatCorrectionWithLatexEnvironments(correction.trim());
     } catch (error) {
         const errorMessage = (error as Error).message;
         logger.error('Erreur lors de la génération de correction', error as Error);
