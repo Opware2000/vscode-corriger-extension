@@ -18,6 +18,15 @@ function getConfig<T>(key: string, defaultValue: T): T {
  * @returns Le prompt complet pour Copilot
  */
 export function generatePedagogicalPrompt(exerciseContent: string): string {
+    const config = vscode.workspace.getConfiguration('vscode-corriger-extension');
+    const template = config.get('pedagogicalPrompt', '') as string;
+
+    if (template && template.trim()) {
+        // Replace the placeholder with actual exercise content
+        return template.replace('{{exerciseContent}}', exerciseContent);
+    }
+
+    // Fallback to default prompt if configuration is empty
     return `Vous êtes un professeur de mathématiques expérimenté enseignant en France. Voici un exercice LaTeX du programme français de mathématiques :
 
 ${exerciseContent}

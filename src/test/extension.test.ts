@@ -702,8 +702,14 @@ Deuxième énoncé
 			sandbox.restore();
 		});
 
-		test('[P1] should generate pedagogical prompt with French adaptations', () => {
-			// GIVEN: Sample exercise content
+		test('[P1] should generate pedagogical prompt with French adaptations using default config', () => {
+			// GIVEN: Mock empty configuration (uses default)
+			const sandbox = sinon.createSandbox();
+			sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+				get: sandbox.stub().returns('')
+			} as any);
+
+			// Sample exercise content
 			const exerciseContent = '\\begin{exercice}\nRésoudre x + 1 = 0\n\\end{exercice}';
 
 			// WHEN: Generating pedagogical prompt
@@ -724,6 +730,28 @@ Deuxième énoncé
 			assert.ok(prompt.includes('donc')); // French vocabulary
 			assert.ok(prompt.includes('car')); // French vocabulary
 			assert.ok(prompt.includes(exerciseContent));
+
+			sandbox.restore();
+		});
+
+		test('[P1] should use custom pedagogical prompt from configuration', () => {
+			// GIVEN: Mock custom configuration
+			const sandbox = sinon.createSandbox();
+			const customPrompt = 'Custom prompt with {{exerciseContent}} placeholder';
+			sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+				get: sandbox.stub().returns(customPrompt)
+			} as any);
+
+			// Sample exercise content
+			const exerciseContent = 'Test exercise content';
+
+			// WHEN: Generating pedagogical prompt
+			const prompt = generatePedagogicalPrompt(exerciseContent);
+
+			// THEN: Uses custom prompt with placeholder replaced
+			assert.strictEqual(prompt, 'Custom prompt with Test exercise content placeholder');
+
+			sandbox.restore();
 		});
 
 		test('[P1] should generate correction using OpenAI', async () => {

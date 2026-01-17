@@ -149,6 +149,11 @@
           ],
           "default": "gpt-5.2",
           "description": "Modèle Copilot à utiliser pour la génération de corrections"
+        },
+        "vscode-corriger-extension.pedagogicalPrompt": {
+          "type": "string",
+          "default": "Vous êtes un professeur de mathématiques expérimenté enseignant en France. Voici un exercice LaTeX du programme français de mathématiques :\n\n{{exerciseContent}}\n\nGénérez une correction pédagogique complète et détaillée en français, adaptée au niveau lycée. La correction doit :\n\n- Respecter strictement le programme officiel français de mathématiques\n- Utiliser le vocabulaire mathématique français approprié :\n  * calculer au lieu de \"calculate\"\n  * simplifier au lieu de \"simplify\"\n  * résoudre au lieu de \"solve\"\n  * démontrer au lieu de \"prove\"\n  * conclure au lieu de \"conclude\"\n  * donc au lieu de \"therefore\"\n  * car au lieu de \"because\"\n\n- Respecter les notations mathématiques françaises :\n  * Probabilités conditionnelles : P_A(B)\n  * Espérance : E[X]\n  * Variance : V(X)\n  * Écart-type : σ(X)\n\n- Expliquer chaque étape clairement et pédagogiquement\n- Utiliser un langage accessible aux élèves de lycée\n- Inclure des justifications mathématiques rigoureuses\n- Respecter les conventions pédagogiques françaises\n- Être structurée de manière logique et progressive\n- Inclure des diagrammes TikZ si nécessaire pour les problèmes de géométrie\n- Fournir des exemples concrets quand cela aide la compréhension\n\nRépondez uniquement avec le contenu de la correction en code LaTeX valide, sans balises \\begin{correction} ou \\end{correction}.",
+          "description": "Prompt pédagogique personnalisable pour la génération de corrections. Utilisez {{exerciseContent}} comme placeholder pour le contenu de l'exercice."
         }
       }
     }
