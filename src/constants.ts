@@ -9,7 +9,7 @@ export const MESSAGES = {
     EXERCISES_DETECTED: (count: number) => `${count} exercice(s) détecté(s) dans le document.`,
     EXERCISE_SELECTED: (number: number) => `Exercice ${number} sélectionné pour correction.`,
     SELECT_EXERCISE_PLACEHOLDER: 'Sélectionnez un exercice à corriger',
-    EXERCISE_DETAIL: (start: number, end: number) => `Lignes ${start}-${end}`
+    EXERCISE_DETAIL: (start: number, end: number) => `Positions ${start}-${end}`
 } as const;
 
 // Decoration styles

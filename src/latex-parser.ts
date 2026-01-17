@@ -32,7 +32,9 @@ export function detectExercises(content: string): Exercise[] {
     while (index < content.length) {
         // Trouver le début d'un exercice
         const beginIndex = content.indexOf('\\begin{exercice}', index);
-        if (beginIndex === -1) break;
+        if (beginIndex === -1) {
+            break;
+        }
 
         // Trouver la fin correspondante en comptant les niveaux d'imbrication
         let endIndex = findMatchingEndExercice(content, beginIndex);
@@ -53,7 +55,7 @@ export function detectExercises(content: string): Exercise[] {
 
         // Validation des positions
         if (start < 0 || end <= start || end > content.length) {
-            console.warn(`Positions invalides pour l'exercice ${exerciseNumber}: start=${start}, end=${end}`);
+            // Positions invalides, passer à l'exercice suivant
             index = beginIndex + 1;
             continue;
         }
