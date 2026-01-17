@@ -62,8 +62,8 @@ async function selectAndValidateExercise(exercises: Exercise[]): Promise<Exercis
  * @param token Token d'annulation
  * @returns La correction générée
  */
-async function generateSingleCorrection(exerciseContent: string, token: vscode.CancellationToken): Promise<string> {
-	return await generateCorrection(exerciseContent, token);
+async function generateSingleCorrection(exerciseContent: string, documentContent: string, token: vscode.CancellationToken): Promise<string> {
+	return await generateCorrection(exerciseContent, documentContent, token);
 }
 
 /**
@@ -77,6 +77,7 @@ async function generateSingleCorrection(exerciseContent: string, token: vscode.C
 async function handleCorrectionPreviewAndRegeneration(
 	initialCorrection: string,
 	exerciseContent: string,
+	documentContent: string,
 	progress: vscode.Progress<{ increment: number; message: string }>,
 	token: vscode.CancellationToken
 ): Promise<string | null> {
@@ -95,7 +96,7 @@ async function handleCorrectionPreviewAndRegeneration(
 
 		if (previewResult === 'regenerate') {
 			progress.report({ increment: 50, message: 'Régénération...' });
-			correction = await generateSingleCorrection(exerciseContent, token);
+			correction = await generateSingleCorrection(exerciseContent, documentContent, token);
 			progress.report({ increment: 100, message: 'Prévisualisation...' });
 			// Continue la boucle pour permettre plusieurs régénérations
 		}
@@ -108,16 +109,17 @@ async function handleCorrectionPreviewAndRegeneration(
  * @param progress Objet de progression pour mettre à jour l'UI
  * @param token Token d'annulation
  */
-async function generateAndInsertCorrection(exercise: Exercise, progress: vscode.Progress<{ increment: number; message: string }>, token: vscode.CancellationToken): Promise<void> {
+async function generateAndInsertCorrection(exercise: Exercise, documentContent: string, progress: vscode.Progress<{ increment: number; message: string }>, token: vscode.CancellationToken): Promise<void> {
 	progress.report({ increment: 0, message: 'Préparation...' });
 
-	const initialCorrection = await generateSingleCorrection(exercise.content, token);
+	const initialCorrection = await generateSingleCorrection(exercise.content, documentContent, token);
 
 	progress.report({ increment: 100, message: 'Prévisualisation...' });
 
 	const finalCorrection = await handleCorrectionPreviewAndRegeneration(
 		initialCorrection,
 		exercise.content,
+		documentContent,
 		progress,
 		token
 	);
@@ -275,7 +277,7 @@ async function handleGenerateCorrectionCommand(): Promise<void> {
 		cancellable: true
 	}, async (progress, token) => {
 		try {
-			await generateAndInsertCorrection(selectedExercise, progress, token);
+			await generateAndInsertCorrection(selectedExercise, content, progress, token);
 			logger.info('Correction générée et insérée avec succès');
 		} catch (error) {
 			handleCorrectionError(error);

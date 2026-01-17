@@ -31,6 +31,27 @@ export interface ExerciseStructure {
     otherContent?: string;
 }
 
+/**
+ * Interface représentant un environnement LaTeX numéroté
+ */
+export interface NumberedEnvironment {
+    type: 'section' | 'subsection' | 'subsubsection' | 'theorem' | 'lemma' | 'proposition' | 'corollary' | 'definition';
+    number: number;
+    title?: string;
+    start: number;
+    end: number;
+}
+
+/**
+ * Interface représentant la structure numérotée d'un document LaTeX
+ */
+export interface DocumentStructure {
+    sections: NumberedEnvironment[];
+    theorems: NumberedEnvironment[];
+    currentSection?: number;
+    currentTheorem?: number;
+}
+
 // Cache for parsed exercises
 const exerciseCache = new Map<string, Exercise[]>();
 
@@ -218,4 +239,113 @@ export function parseExerciseStructure(exerciseContent: string): ExerciseStructu
     }
 
     return structure;
+}
+
+/**
+ * Analyse la structure globale d'un document LaTeX pour identifier les environnements numérotés
+ * @param content Le contenu LaTeX du document
+ * @returns Un objet DocumentStructure avec la structure analysée
+ */
+export function analyzeDocumentStructure(content: string): DocumentStructure {
+    logger.debug('Analyse de la structure globale du document LaTeX');
+
+    const structure: DocumentStructure = {
+        sections: [],
+        theorems: []
+    };
+
+    // Détecter les sections
+    const sectionRegex = /\\(section|subsection|subsubsection)(?:\[([^\]]*)\])?\{([^\}]*)\}/g;
+    let match;
+
+    while ((match = sectionRegex.exec(content)) !== null) {
+        const type = match[1] as 'section' | 'subsection' | 'subsubsection';
+        const title = match[3];
+        const number = structure.sections.filter(s => s.type === type).length + 1;
+
+        structure.sections.push({
+            type,
+            number,
+            title,
+            start: match.index,
+            end: match.index + match[0].length
+        });
+    }
+
+    // Détecter les théorèmes et environnements mathématiques
+    const theoremEnvs = ['theorem', 'lemma', 'proposition', 'corollary', 'definition'];
+    theoremEnvs.forEach(envType => {
+        const theoremRegex = new RegExp(`\\\\begin\\{${envType}\\}(?:\\[([^\\]]*)\\])?([\\s\\S]*?)\\\\end\\{${envType}\\}`, 'g');
+        let theoremMatch;
+
+        while ((theoremMatch = theoremRegex.exec(content)) !== null) {
+            const title = theoremMatch[1];
+            const number = structure.theorems.filter(t => t.type === envType).length + 1;
+
+            structure.theorems.push({
+                type: envType as any,
+                number,
+                title,
+                start: theoremMatch.index,
+                end: theoremMatch.index + theoremMatch[0].length
+            });
+        }
+    });
+
+    // Déterminer les numéros courants
+    if (structure.sections.length > 0) {
+        structure.currentSection = Math.max(...structure.sections.map(s => s.number));
+    }
+
+    if (structure.theorems.length > 0) {
+        structure.currentTheorem = Math.max(...structure.theorems.map(t => t.number));
+    }
+
+    logger.info(`Structure analysée: ${structure.sections.length} sections, ${structure.theorems.length} théorèmes`);
+    return structure;
+}
+
+/**
+ * Génère un numéro approprié pour un nouvel environnement dans le document
+ * @param structure La structure analysée du document
+ * @param type Le type d'environnement ('section', 'theorem', etc.)
+ * @returns Le numéro à utiliser
+ */
+export function generateNextNumber(structure: DocumentStructure, type: 'section' | 'theorem'): number {
+    if (type === 'section') {
+        return (structure.currentSection || 0) + 1;
+    } else if (type === 'theorem') {
+        return (structure.currentTheorem || 0) + 1;
+    }
+    return 1;
+}
+
+/**
+ * Génère une correction LaTeX avec numérotation et environnements appropriés
+ * @param correctionContent Le contenu de la correction
+ * @param documentStructure La structure du document pour la numérotation
+ * @returns La correction formatée avec environnements LaTeX appropriés
+ */
+export function formatCorrectionWithLatexEnvironments(
+    correctionContent: string,
+    documentStructure: DocumentStructure
+): string {
+    // Pour l'instant, on garde le format simple mais on peut l'étendre
+    // pour inclure des environnements align, equation, etc. selon le contenu
+
+    let formattedCorrection = correctionContent;
+
+    // Détecter et remplacer les expressions mathématiques simples
+    // par des environnements LaTeX appropriés
+    if (correctionContent.includes('$$') || correctionContent.includes('\\[')) {
+        // Le contenu contient déjà des maths - on le laisse tel quel
+    } else if (correctionContent.includes('=')) {
+        // Potentiellement une équation - on peut l'encadrer
+        formattedCorrection = formattedCorrection.replace(
+            /(\$\$[^\$]+\$\$)/g,
+            '\\begin{equation*}\n$1\n\\end{equation*}'
+        );
+    }
+
+    return `\\begin{correction}\n${formattedCorrection}\n\\end{correction}`;
 }

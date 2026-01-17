@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { generateCorrectionWithOpenAI } from './openai-integration';
 import { callCopilotWithTimeout, isCopilotAvailable } from './copilot-integration';
+import { analyzeDocumentStructure, formatCorrectionWithLatexEnvironments } from './latex-parser';
 import { MESSAGES, FRENCH_MATH_NOTATIONS, FRENCH_MATH_VOCABULARY } from './constants';
 import { logger } from './logger';
 import { getConfig } from './config';
@@ -67,10 +68,17 @@ Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans
  */
 export async function generateCorrection(
     exerciseContent: string,
+    documentContent?: string,
     cancellationToken?: vscode.CancellationToken
 ): Promise<string> {
     try {
         logger.info('Début de génération de correction pour un exercice');
+
+        // Analyser la structure du document si fournie pour la numérotation
+        let documentStructure = undefined;
+        if (documentContent) {
+            documentStructure = analyzeDocumentStructure(documentContent);
+        }
 
         const aiProvider = getConfig('aiProvider', 'openai') as 'openai' | 'copilot';
         let correction: string;
@@ -97,7 +105,13 @@ export async function generateCorrection(
         }
 
         logger.info('Correction générée avec succès');
-        return `\\begin{correction}\n${correction.trim()}\n\\end{correction}`;
+
+        // Formater avec environnements LaTeX appropriés si structure disponible
+        if (documentStructure) {
+            return formatCorrectionWithLatexEnvironments(correction.trim(), documentStructure);
+        } else {
+            return `\\begin{correction}\n${correction.trim()}\n\\end{correction}`;
+        }
     } catch (error) {
         const errorMessage = (error as Error).message;
         logger.error('Erreur lors de la génération de correction', error as Error);
