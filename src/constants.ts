@@ -5,6 +5,7 @@
 // Timeouts and limits
 export const TIMEOUTS = {
     COPILOT_REQUEST: 30000, // 30 seconds for Copilot API calls
+    OPENAI_REQUEST: 30000, // 30 seconds for OpenAI API calls
     COPILOT_TEST: 1000, // 1 second for test timeouts
     RATE_LIMIT_WINDOW: 60000, // 1 minute window for rate limiting
 } as const;
@@ -13,6 +14,8 @@ export const LIMITS = {
     MAX_REQUESTS_PER_WINDOW: 10, // Maximum Copilot requests per time window
     MAX_DOCUMENT_SIZE: 10 * 1024 * 1024, // 10MB max document size
     MAX_EXERCISES_CACHE: 100, // Maximum exercises to cache
+    CORRECTION_CACHE_SIZE: 50, // Default correction cache size
+    EXERCISE_CACHE_SIZE: 10, // Default exercise cache size
 } as const;
 
 // User-facing messages

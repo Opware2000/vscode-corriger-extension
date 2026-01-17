@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import OpenAI from 'openai';
-import { MESSAGES } from './constants';
+import { MESSAGES, TIMEOUTS, LIMITS } from './constants';
 import { logger } from './logger';
 
 // Cache for corrections
@@ -76,7 +76,7 @@ function cacheCorrection(exerciseContent: string, correction: string): void {
     if (!enableCache) return;
 
     const key = generateCacheKey(exerciseContent);
-    const cacheSize = getConfig('correctionCacheSize', 50);
+    const cacheSize = getConfig('correctionCacheSize', LIMITS.CORRECTION_CACHE_SIZE);
 
     // Remove oldest entries if cache is full
     if (correctionCache.size >= cacheSize) {
@@ -109,7 +109,7 @@ export async function generateCorrectionWithOpenAI(
 
     const client = getOpenAIClient();
     const model = getConfig('openaiModel', 'gpt-4');
-    const timeout = getConfig('openaiTimeout', 30000);
+    const timeout = getConfig('openaiTimeout', TIMEOUTS.OPENAI_REQUEST);
 
     const prompt = `Vous êtes un professeur de mathématiques expérimenté. Voici un exercice LaTeX :
 

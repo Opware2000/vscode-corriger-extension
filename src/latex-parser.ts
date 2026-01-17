@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { createHash } from 'crypto';
+import { LIMITS } from './constants';
 import { logger } from './logger';
 
 /**
@@ -147,7 +148,7 @@ export function detectExercises(content: string): Exercise[] {
         const cacheKey = createHash('md5').update(content).digest('hex');
         exerciseCache.set(cacheKey, exercises);
         // Limit cache size
-        const maxCacheSize = getConfig('maxCacheSize', 10);
+        const maxCacheSize = getConfig('maxCacheSize', LIMITS.EXERCISE_CACHE_SIZE);
         if (exerciseCache.size > maxCacheSize) {
             const firstKey = exerciseCache.keys().next().value;
             if (firstKey) {
