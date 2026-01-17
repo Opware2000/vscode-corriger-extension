@@ -79,11 +79,13 @@ export async function callCopilotWithTimeout(
         return request;
     } catch (error) {
         clearTimeout(timeoutId);
-        if (tokenSource.token.isCancellationRequested && !cancellationToken?.isCancellationRequested) {
-            throw new Error('Timeout calling Copilot');
-        }
+        // Check user cancellation first
         if (cancellationToken?.isCancellationRequested) {
             throw new Error(MESSAGES.GENERATION_CANCELLED);
+        }
+        // Then check for timeout
+        if (tokenSource.token.isCancellationRequested) {
+            throw new Error('Timeout calling Copilot');
         }
         throw error;
     }

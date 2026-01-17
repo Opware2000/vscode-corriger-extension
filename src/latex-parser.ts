@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { createHash } from 'crypto';
 
 /**
  * Interface représentant un exercice détecté dans le document LaTeX
@@ -102,7 +103,7 @@ export function detectExercises(content: string): Exercise[] {
     // Check cache first if enabled
     const enableCache = getConfig('enableCache', true);
     if (enableCache) {
-        const cacheKey = `${content.length}-${content.slice(0, 100)}-${content.slice(-100)}`;
+        const cacheKey = createHash('md5').update(content).digest('hex');
         if (exerciseCache.has(cacheKey)) {
             cacheHits++;
             console.log('Cache hit for exercise detection');
@@ -142,7 +143,7 @@ export function detectExercises(content: string): Exercise[] {
 
     // Cache the result if enabled and not too many exercises
     if (enableCache && exercises.length <= 100) {
-        const cacheKey = `${content.length}-${content.slice(0, 100)}-${content.slice(-100)}`;
+        const cacheKey = createHash('md5').update(content).digest('hex');
         exerciseCache.set(cacheKey, exercises);
         // Limit cache size
         const maxCacheSize = getConfig('maxCacheSize', 10);

@@ -47,6 +47,22 @@
           "type": "number",
           "default": 10,
           "description": "Taille maximale du cache des exercices"
+        },
+        "vscode-corriger-extension.debugMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Activer le mode debug pour les logs détaillés"
+        },
+        "vscode-corriger-extension.logLevel": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warn",
+            "info",
+            "debug"
+          ],
+          "default": "info",
+          "description": "Niveau de verbosité des logs"
         }
       }
     }

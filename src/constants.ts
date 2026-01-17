@@ -26,6 +26,17 @@ export const MESSAGES = {
     COPILOT_UNAVAILABLE: 'Copilot n\'est pas disponible. Vérifiez que GitHub Copilot Chat est installé et activé.',
     GENERATION_CANCELLED: 'Génération de correction annulée par l\'utilisateur.',
     RATE_LIMIT_EXCEEDED: 'Trop de requêtes. Veuillez patienter avant de réessayer.',
+    CORRECTION_GENERATED: 'Correction générée et insérée avec succès.',
+    EXERCISE_ALREADY_CORRECTED: 'Cet exercice a déjà une correction.',
+} as const;
+
+// Error codes
+export const ERROR_CODES = {
+    COPILOT_UNAVAILABLE: 'COPILOT_UNAVAILABLE',
+    RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+    GENERATION_CANCELLED: 'GENERATION_CANCELLED',
+    LATEX_PARSE_ERROR: 'LATEX_PARSE_ERROR',
+    VALIDATION_ERROR: 'VALIDATION_ERROR',
 } as const;
 
 // Decoration styles

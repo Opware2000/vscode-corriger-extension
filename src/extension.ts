@@ -6,6 +6,111 @@ import { detectExercises, parseExerciseStructure } from './latex-parser';
 import { selectExercise, clearExerciseHighlights } from './exercise-selector';
 import { generateCorrection } from './correction-generator';
 import { MESSAGES } from './constants';
+import { logger } from './logger';
+import { CopilotError, RateLimitError, CancellationError } from './errors';
+import { Exercise } from './latex-parser';
+
+/**
+ * Valide le document actif et retourne son contenu
+ * @returns Le contenu du document ou null si invalide
+ */
+async function validateAndGetDocumentContent(): Promise<string | null> {
+	const content = getActiveDocumentContent();
+	if (!content) {
+		vscode.window.showInformationMessage(MESSAGES.NO_DOCUMENT);
+		return null;
+	}
+	return content;
+}
+
+/**
+ * Détecte les exercices dans le contenu et valide qu'il y en a
+ * @param content Le contenu LaTeX du document
+ * @returns Tableau des exercices détectés
+ */
+function detectAndValidateExercises(content: string): Exercise[] {
+	const exercises = detectExercises(content);
+	if (exercises.length === 0) {
+		vscode.window.showInformationMessage(MESSAGES.NO_EXERCISES_FOUND);
+	}
+	return exercises;
+}
+
+/**
+ * Sélectionne un exercice et le valide
+ * @param exercises Liste des exercices disponibles
+ * @returns L'exercice sélectionné ou null si annulé/invalide
+ */
+async function selectAndValidateExercise(exercises: Exercise[]): Promise<Exercise | null> {
+	try {
+		const selectedExercise = await selectExercise(exercises);
+		if (!selectedExercise) {
+			return null;
+		}
+
+		// Vérifier si l'exercice a déjà une correction
+		const structure = parseExerciseStructure(selectedExercise.content);
+		if (structure.correction) {
+			vscode.window.showInformationMessage(MESSAGES.EXERCISE_ALREADY_CORRECTED);
+			return null;
+		}
+
+		return selectedExercise;
+	} catch (error) {
+		logger.error('Erreur lors de la sélection d\'exercice', error as Error);
+		vscode.window.showErrorMessage('Erreur lors de la sélection d\'exercice');
+		return null;
+	}
+}
+
+/**
+ * Génère et insère la correction dans le document
+ * @param exercise L'exercice pour lequel générer la correction
+ * @param progress Objet de progression pour mettre à jour l'UI
+ * @param token Token d'annulation
+ */
+async function generateAndInsertCorrection(exercise: Exercise, progress: vscode.Progress<{ increment: number; message: string }>, token: vscode.CancellationToken): Promise<void> {
+	progress.report({ increment: 0, message: 'Préparation...' });
+
+	const correction = await generateCorrection(exercise.content, token);
+
+	progress.report({ increment: 100, message: 'Insertion de la correction...' });
+
+	// Insérer la correction dans le document
+	const editor = vscode.window.activeTextEditor;
+	if (editor) {
+		// Trouver la position de fin de l'exercice (avant \end{exercice})
+		const endTagIndex = exercise.content.lastIndexOf('\\end{exercice}');
+		const insertPosition = endTagIndex !== -1 ?
+			editor.document.positionAt(exercise.start + endTagIndex) :
+			editor.document.positionAt(exercise.end);
+
+		await editor.edit(editBuilder => {
+			editBuilder.insert(insertPosition, '\n' + correction);
+		});
+		vscode.window.showInformationMessage(MESSAGES.CORRECTION_GENERATED);
+	}
+}
+
+/**
+ * Gère les erreurs de génération de correction
+ * @param error L'erreur à traiter
+ */
+function handleCorrectionError(error: unknown): void {
+	const errorMessage = (error as Error).message;
+	logger.error('Erreur lors de la génération de correction', error as Error);
+
+	// Gérer les erreurs spécifiques
+	if (error instanceof CopilotError) {
+		vscode.window.showErrorMessage(MESSAGES.COPILOT_UNAVAILABLE);
+	} else if (error instanceof RateLimitError) {
+		vscode.window.showErrorMessage(MESSAGES.RATE_LIMIT_EXCEEDED);
+	} else if (error instanceof CancellationError) {
+		vscode.window.showInformationMessage(MESSAGES.GENERATION_CANCELLED);
+	} else {
+		vscode.window.showErrorMessage(`Erreur lors de la génération de correction: ${errorMessage}`);
+	}
+}
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -19,14 +124,14 @@ export function activate(context: vscode.ExtensionContext) {
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
 	const disposable = vscode.commands.registerCommand('vscode-corriger-extension.detectExercises', async () => {
+		logger.info('Début de la commande detectExercises');
+
 		// Effacer les anciennes mises en surbrillance
 		clearExerciseHighlights();
 
-		// Récupérer le contenu du document actif
-		const content = getActiveDocumentContent();
-
+		// Valider et récupérer le contenu du document
+		const content = await validateAndGetDocumentContent();
 		if (!content) {
-			vscode.window.showInformationMessage(MESSAGES.NO_DOCUMENT);
 			return;
 		}
 
@@ -35,61 +140,53 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if (exercises.length === 0) {
 			vscode.window.showInformationMessage(MESSAGES.NO_EXERCISES_FOUND);
+			logger.info('Aucun exercice détecté');
 			return;
 		}
 
 		// Afficher le nombre d'exercices détectés
 		const message = MESSAGES.EXERCISES_DETECTED(exercises.length);
 		vscode.window.showInformationMessage(message);
-
-		// Afficher les détails dans la console
-		console.log('Exercices détectés:', exercises);
+		logger.info(`${exercises.length} exercices détectés`);
 
 		// Permettre la sélection d'un exercice
-		selectExercise(exercises).then(selectedExercise => {
+		try {
+			const selectedExercise = await selectExercise(exercises);
 			if (selectedExercise) {
 				vscode.window.showInformationMessage(MESSAGES.EXERCISE_SELECTED(selectedExercise.number));
-				console.log('Exercice sélectionné:', selectedExercise);
+				logger.info(`Exercice sélectionné: ${selectedExercise.number}`);
 			}
-		}).catch(error => {
-			console.error('Erreur lors de la sélection d\'exercice:', error);
+		} catch (error) {
+			logger.error('Erreur lors de la sélection d\'exercice', error as Error);
 			vscode.window.showErrorMessage('Erreur lors de la sélection d\'exercice');
-		});
+		}
 	});
 
 	context.subscriptions.push(disposable);
 
 	// Commande pour générer une correction
 	const generateCorrectionDisposable = vscode.commands.registerCommand('vscode-corriger-extension.generateCorrection', async () => {
-		// Récupérer le contenu du document actif
-		const content = getActiveDocumentContent();
+		logger.info('Début de la commande generateCorrection');
 
+		// Valider et récupérer le contenu du document
+		const content = await validateAndGetDocumentContent();
 		if (!content) {
-			vscode.window.showInformationMessage(MESSAGES.NO_DOCUMENT);
 			return;
 		}
 
-		// Détecter les exercices
-		const exercises = detectExercises(content);
-
+		// Détecter et valider les exercices
+		const exercises = detectAndValidateExercises(content);
 		if (exercises.length === 0) {
-			vscode.window.showInformationMessage(MESSAGES.NO_EXERCISES_FOUND);
 			return;
 		}
 
-		// Sélectionner un exercice
-		const selectedExercise = await selectExercise(exercises);
-
+		// Sélectionner et valider un exercice
+		const selectedExercise = await selectAndValidateExercise(exercises);
 		if (!selectedExercise) {
 			return;
 		}
 
-		// Vérifier si l'exercice a déjà une correction
-		const structure = parseExerciseStructure(selectedExercise.content);
-		if (structure.correction) {
-			vscode.window.showInformationMessage('Cet exercice a déjà une correction.');
-			return;
-		}
+		logger.info(`Exercice sélectionné: ${selectedExercise.number}`);
 
 		// Générer la correction avec progression et annulation
 		await vscode.window.withProgress({
@@ -98,35 +195,10 @@ export function activate(context: vscode.ExtensionContext) {
 			cancellable: true
 		}, async (progress, token) => {
 			try {
-				progress.report({ increment: 0, message: 'Préparation...' });
-
-				const correction = await generateCorrection(selectedExercise.content, token);
-
-				progress.report({ increment: 100, message: 'Insertion de la correction...' });
-
-				// Insérer la correction dans le document
-				const editor = vscode.window.activeTextEditor;
-				if (editor) {
-					const position = editor.document.positionAt(selectedExercise.end);
-					await editor.edit(editBuilder => {
-						editBuilder.insert(position, '\n' + correction);
-					});
-					vscode.window.showInformationMessage('Correction générée et insérée avec succès.');
-				}
+				await generateAndInsertCorrection(selectedExercise, progress, token);
+				logger.info('Correction générée et insérée avec succès');
 			} catch (error) {
-				const errorMessage = (error as Error).message;
-				console.error('Erreur lors de la génération de correction:', errorMessage);
-
-				// Afficher des messages d'erreur spécifiques
-				if (errorMessage.includes('Copilot not available')) {
-					vscode.window.showErrorMessage(MESSAGES.COPILOT_UNAVAILABLE);
-				} else if (errorMessage.includes('rate limit')) {
-					vscode.window.showErrorMessage(MESSAGES.RATE_LIMIT_EXCEEDED);
-				} else if (errorMessage.includes('cancelled')) {
-					vscode.window.showInformationMessage(MESSAGES.GENERATION_CANCELLED);
-				} else {
-					vscode.window.showErrorMessage(`Erreur lors de la génération de correction: ${errorMessage}`);
-				}
+				handleCorrectionError(error);
 			}
 		});
 	});
