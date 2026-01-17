@@ -3,7 +3,7 @@ import { Exercise } from './latex-parser';
 import { DECORATION_STYLES, MESSAGES } from './constants';
 
 /**
- * Interface for QuickPick items that include exercise data
+ * Interface pour les éléments QuickPick qui incluent les données d'exercice
  */
 export interface ExerciseQuickPickItem extends vscode.QuickPickItem {
     exercise: Exercise;

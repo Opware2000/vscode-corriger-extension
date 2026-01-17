@@ -1,71 +1,154 @@
-# vscode-corriger-extension README
+# VSCode Corriger Extension
 
-This is the README for your extension "vscode-corriger-extension". After writing up a brief description, we recommend including the following sections.
+Extension VSCode pour la correction automatique d'exercices LaTeX utilisant l'IA Copilot.
 
-## Features
+## Fonctionnalités
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+Cette extension permet de :
 
-For example if there is an image subfolder under your extension project workspace:
+- **Détecter automatiquement les exercices** dans les documents LaTeX utilisant les balises `\begin{exercice}` et `\end{exercice}`
+- **Sélectionner un exercice** à corriger via une interface interactive
+- **Générer des corrections pédagogiques** complètes et détaillées en français
+- **Insérer automatiquement** les corrections dans le document
+- **Mettre en surbrillance** les exercices détectés dans l'éditeur
 
-\!\[feature X\]\(images/feature-x.png\)
+### Commandes disponibles
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- `vscode-corriger-extension.detectExercises` : Détecte et met en surbrillance tous les exercices du document
+- `vscode-corriger-extension.generateCorrection` : Génère une correction pour l'exercice sélectionné
 
-## Requirements
+## Prérequis
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- **VSCode** version 1.108.1 ou supérieure
+- **GitHub Copilot Chat** installé et activé dans VSCode
+- Documents en format LaTeX avec des exercices structurés
 
-## Extension Settings
+## Installation
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+1. Installez l'extension depuis le marketplace VSCode
+2. Assurez-vous que GitHub Copilot Chat est installé et configuré
+3. Ouvrez un document LaTeX contenant des exercices
 
-For example:
+## Utilisation
 
-This extension contributes the following settings:
+### Structure des exercices LaTeX
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+Les exercices doivent suivre cette structure :
 
-## Known Issues
+```latex
+\begin{exercice}
+\begin{enonce}
+Votre énoncé d'exercice ici...
+\end{enonce}
+\begin{correction}
+La correction sera générée ici
+\end{correction}
+\end{exercice}
+```
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+### Workflow de correction
 
-## Release Notes
+1. **Détection** : Utilisez `Ctrl+Shift+P` → "Détecter les exercices LaTeX"
+2. **Sélection** : Choisissez l'exercice à corriger dans la liste
+3. **Génération** : Lancez la génération de correction
+4. **Insertion** : La correction est automatiquement insérée dans le document
 
-Users appreciate release notes as you update your extension.
+## Configuration
 
-### 1.0.0
+L'extension propose plusieurs paramètres configurables :
 
-Initial release of ...
+### `vscode-corriger-extension.copilotTimeout`
+- **Type** : `number`
+- **Défaut** : `30000`
+- **Description** : Timeout en millisecondes pour les appels à Copilot
 
-### 1.0.1
+### `vscode-corriger-extension.rateLimitRequests`
+- **Type** : `number`
+- **Défaut** : `10`
+- **Description** : Nombre maximum de requêtes Copilot par minute
 
-Fixed issue #.
+### `vscode-corriger-extension.enableCache`
+- **Type** : `boolean`
+- **Défaut** : `true`
+- **Description** : Activer le cache des exercices parsés
 
-### 1.1.0
+### `vscode-corriger-extension.maxCacheSize`
+- **Type** : `number`
+- **Défaut** : `10`
+- **Description** : Taille maximale du cache des exercices
 
-Added features X, Y, and Z.
+## Architecture technique
+
+### Modules principaux
+
+- **`extension.ts`** : Point d'entrée et gestion des commandes
+- **`latex-parser.ts`** : Parsing et détection des exercices LaTeX
+- **`exercise-selector.ts`** : Interface de sélection des exercices
+- **`correction-generator.ts`** : Génération des corrections via Copilot
+- **`copilot-integration.ts`** : Intégration avec l'API Copilot
+- **`document-access.ts`** : Accès au contenu des documents
+- **`constants.ts`** : Constantes et messages de l'application
+
+### Fonctionnalités de performance
+
+- **Cache intelligent** des exercices parsés
+- **Rate limiting** pour éviter la surcharge des API
+- **Parsing optimisé** avec expressions régulières
+- **Métriques de performance** intégrées
+- **Annulation des opérations** longues
+
+### Sécurité
+
+- Validation des entrées utilisateur
+- Gestion sécurisée des timeouts
+- Protection contre les attaques ReDoS
+- Messages d'erreur informatifs
+
+## Tests
+
+L'extension inclut une suite complète de tests :
+
+```bash
+npm run test:unit      # Tests unitaires
+npm run test:e2e       # Tests end-to-end
+npm run test:integration # Tests d'intégration
+```
+
+## Développement
+
+### Prérequis de développement
+
+```bash
+npm install
+npm run compile
+```
+
+### Scripts disponibles
+
+- `npm run compile` : Compilation TypeScript
+- `npm run watch` : Compilation en mode watch
+- `npm run lint` : Vérification du code
+- `npm run test` : Exécution des tests
+- `npm run package` : Création du package d'extension
+
+## Problèmes connus
+
+- L'extension nécessite GitHub Copilot Chat pour fonctionner
+- Les documents très volumineux peuvent nécessiter plus de temps de traitement
+- La génération de corrections peut être limitée par les quotas Copilot
+
+## Support et contribution
+
+Pour signaler un problème ou contribuer :
+
+1. Vérifiez les [issues existantes](https://github.com/your-repo/issues)
+2. Créez une nouvelle issue avec les détails du problème
+3. Pour les contributions, créez une pull request
+
+## Licence
+
+Cette extension est distribuée sous licence MIT.
 
 ---
 
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+**Profitez de corrections automatisées pour vos exercices LaTeX !**
