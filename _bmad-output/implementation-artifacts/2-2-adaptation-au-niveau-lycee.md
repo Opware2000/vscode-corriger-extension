@@ -1,6 +1,6 @@
 # Story 2.2: Adaptation au niveau lycée
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,16 +19,16 @@ So that le contenu utilise le vocabulaire et les notations appropriés.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Modifier les prompts Copilot pour adaptation française (AC: 1)
-  - [ ] Subtask 1.1: Ajouter instructions pour programme français dans generatePedagogicalPrompt
-  - [ ] Subtask 1.2: Spécifier notations mathématiques françaises (P_A(B) pour probabilités)
-  - [ ] Subtask 1.3: Inclure vocabulaire spécifique au programme français
-  - [ ] Subtask 1.4: Demander génération en code LaTeX valide
-  - [ ] Subtask 1.5: Respect des conventions pédagogiques françaises
-- [ ] Task 2: Tester l'adaptation sur différents exercices (AC: 1)
-  - [ ] Subtask 2.1: Générer corrections pour exercices variés
-  - [ ] Subtask 2.2: Vérifier utilisation correcte des notations françaises
-  - [ ] Subtask 2.3: Valider vocabulaire approprié
+- [x] Task 1: Modifier les prompts Copilot pour adaptation française (AC: 1)
+   - [x] Subtask 1.1: Ajouter instructions pour programme français dans generatePedagogicalPrompt
+   - [x] Subtask 1.2: Spécifier notations mathématiques françaises (P_A(B) pour probabilités)
+   - [x] Subtask 1.3: Inclure vocabulaire spécifique au programme français
+   - [x] Subtask 1.4: Demander génération en code LaTeX valide
+   - [x] Subtask 1.5: Respect des conventions pédagogiques françaises
+- [x] Task 2: Tester l'adaptation sur différents exercices (AC: 1)
+   - [x] Subtask 2.1: Générer corrections pour exercices variés
+   - [x] Subtask 2.2: Vérifier utilisation correcte des notations françaises
+   - [x] Subtask 2.3: Valider vocabulaire approprié
 
 ## Dev Notes
 
@@ -85,12 +85,19 @@ x-ai/grok-code-fast-1
 - Identification des composants à modifier : correction-generator.ts, latex-parser.ts
 - Définition des tâches d'implémentation avec sous-tâches détaillées
 - Inclusion des références aux documents source pour traçabilité
+- Implémentation de generatePedagogicalPrompt avec instructions françaises complètes
+- Ajout de constantes pour notations et vocabulaire mathématiques français
+- Modification de generateCorrection pour utiliser le nouveau prompt pédagogique
+- Tests unitaires ajoutés pour valider la génération du prompt français
+- Toutes les sous-tâches terminées avec tests passant
 
 ### File List
 
 - src/correction-generator.ts (modifié)
 - src/constants.ts (modifié)
+- src/test/extension.test.ts (modifié)
 
 ## Change Log
 
 - Création de la story complète pour adaptation au niveau lycée (2026-01-17)
+- Implémentation complète des adaptations françaises pour Copilot (2026-01-17)

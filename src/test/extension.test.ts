@@ -8,7 +8,7 @@ import { getActiveDocumentContent } from '../document-access';
 import { detectExercises, parseExerciseStructure, Exercise } from '../latex-parser';
 import { selectExercise, highlightExercise, clearExerciseHighlights } from '../exercise-selector';
 import { isCopilotAvailable, callCopilotWithTimeout } from '../copilot-integration';
-import { generateCorrection } from '../correction-generator';
+import { generateCorrection, generatePedagogicalPrompt } from '../correction-generator';
 
 // Test data factories
 const createLatexWithExercises = (count: number, overrides: string[] = []): string => {
@@ -702,6 +702,29 @@ Deuxième énoncé
 			sandbox.restore();
 		});
 
+		test('[P1] should generate pedagogical prompt with French adaptations', () => {
+			// GIVEN: Sample exercise content
+			const exerciseContent = '\\begin{exercice}\nRésoudre x + 1 = 0\n\\end{exercice}';
+
+			// WHEN: Generating pedagogical prompt
+			const prompt = generatePedagogicalPrompt(exerciseContent);
+
+			// THEN: Prompt includes French adaptations
+			assert.ok(typeof prompt === 'string');
+			assert.ok(prompt.includes('professeur de mathématiques expérimenté enseignant en France'));
+			assert.ok(prompt.includes('programme officiel français de mathématiques'));
+			assert.ok(prompt.includes('vocabulaire mathématique français approprié'));
+			assert.ok(prompt.includes('notations mathématiques françaises'));
+			assert.ok(prompt.includes('P_A(B)')); // Probability conditional notation
+			assert.ok(prompt.includes('calculer')); // French vocabulary
+			assert.ok(prompt.includes('simplifier')); // French vocabulary
+			assert.ok(prompt.includes('résoudre')); // French vocabulary
+			assert.ok(prompt.includes('démontrer')); // French vocabulary
+			assert.ok(prompt.includes('conclure')); // French vocabulary
+			assert.ok(prompt.includes('donc')); // French vocabulary
+			assert.ok(prompt.includes('car')); // French vocabulary
+			assert.ok(prompt.includes(exerciseContent));
+		});
 
 		test('[P1] should generate correction using OpenAI', async () => {
 			// GIVEN: Mock OpenAI API

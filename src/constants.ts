@@ -42,6 +42,42 @@ export const ERROR_CODES = {
     VALIDATION_ERROR: 'VALIDATION_ERROR',
 } as const;
 
+// French mathematical notations and vocabulary
+export const FRENCH_MATH_NOTATIONS = {
+    PROBABILITY_CONDITIONAL: 'P_A(B)', // Probabilité conditionnelle
+    EXPECTED_VALUE: 'E[X]', // Espérance mathématique
+    VARIANCE: 'V(X)', // Variance
+    STANDARD_DEVIATION: 'σ(X)', // Écart-type
+    INTEGRAL: '\\int', // Intégrale
+    DERIVATIVE: '\\frac{d}{dx}', // Dérivée
+    LIMIT: '\\lim', // Limite
+    SUM: '\\sum', // Somme
+    PRODUCT: '\\prod', // Produit
+} as const;
+
+// French mathematical vocabulary
+export const FRENCH_MATH_VOCABULARY = {
+    SOLUTION: 'solution',
+    CALCULATE: 'calculer',
+    SIMPLIFY: 'simplifier',
+    FACTOR: 'factoriser',
+    DEVELOP: 'développer',
+    RESOLVE: 'résoudre',
+    DEMONSTRATE: 'démontrer',
+    VERIFY: 'vérifier',
+    CONCLUDE: 'conclure',
+    THEREFORE: 'donc',
+    BECAUSE: 'car',
+    SINCE: 'puisque',
+    LET: 'soit',
+    SUCH_THAT: 'tel que',
+    FOR_ALL: 'pour tout',
+    EXISTS: 'il existe',
+    EQUIVALENT: 'équivalent',
+    IDENTICAL: 'identique',
+    SIMILAR: 'semblable',
+} as const;
+
 // Decoration styles
 export const DECORATION_STYLES = {
     EXERCISE_HIGHLIGHT_BACKGROUND: 'rgba(255, 255, 0, 0.3)',

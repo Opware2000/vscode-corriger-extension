@@ -53,8 +53,8 @@ development_status:
 
   epic-2: in-progress
   2-1-generation-de-corrections-pedagogiques-completes: review
-  2-2-adaptation-au-niveau-lycee: ready-for-dev
-  2-3-structuration-avec-format-latex-approprie: backlog
+  2-2-adaptation-au-niveau-lycee: review
+  2-3-structuration-avec-format-latex-approprie: ready-for-dev
   2-4-respect-de-la-notation-mathematique-francaise: backlog
   epic-2-retrospective: optional
 
