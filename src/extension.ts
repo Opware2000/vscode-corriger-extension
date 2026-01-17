@@ -2,8 +2,9 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { getActiveDocumentContent } from './document-access';
-import { detectExercises } from './latex-parser';
+import { detectExercises, parseExerciseStructure } from './latex-parser';
 import { selectExercise, clearExerciseHighlights } from './exercise-selector';
+import { generateCorrection } from './correction-generator';
 import { MESSAGES } from './constants';
 
 // This method is called when your extension is activated
@@ -57,6 +58,60 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	context.subscriptions.push(disposable);
+
+	// Commande pour générer une correction
+	const generateCorrectionDisposable = vscode.commands.registerCommand('vscode-corriger-extension.generateCorrection', async () => {
+		// Récupérer le contenu du document actif
+		const content = getActiveDocumentContent();
+
+		if (!content) {
+			vscode.window.showInformationMessage(MESSAGES.NO_DOCUMENT);
+			return;
+		}
+
+		// Détecter les exercices
+		const exercises = detectExercises(content);
+
+		if (exercises.length === 0) {
+			vscode.window.showInformationMessage(MESSAGES.NO_EXERCISES_FOUND);
+			return;
+		}
+
+		// Sélectionner un exercice
+		const selectedExercise = await selectExercise(exercises);
+
+		if (!selectedExercise) {
+			return;
+		}
+
+		// Vérifier si l'exercice a déjà une correction
+		const structure = parseExerciseStructure(selectedExercise.content);
+		if (structure.correction) {
+			vscode.window.showInformationMessage('Cet exercice a déjà une correction.');
+			return;
+		}
+
+		// Générer la correction
+		try {
+			vscode.window.showInformationMessage('Génération de la correction en cours...');
+			const correction = await generateCorrection(selectedExercise.content);
+
+			// Insérer la correction dans le document
+			const editor = vscode.window.activeTextEditor;
+			if (editor) {
+				const position = editor.document.positionAt(selectedExercise.end);
+				await editor.edit(editBuilder => {
+					editBuilder.insert(position, '\n' + correction);
+				});
+				vscode.window.showInformationMessage('Correction générée et insérée avec succès.');
+			}
+		} catch (error) {
+			console.error('Erreur lors de la génération de correction:', error);
+			vscode.window.showErrorMessage(`Erreur lors de la génération de correction: ${(error as Error).message}`);
+		}
+	});
+
+	context.subscriptions.push(generateCorrectionDisposable);
 }
 
 // This method is called when your extension is deactivated

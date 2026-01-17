@@ -7,6 +7,8 @@ import * as sinon from 'sinon';
 import { getActiveDocumentContent } from '../document-access';
 import { detectExercises, parseExerciseStructure, Exercise } from '../latex-parser';
 import { selectExercise, highlightExercise, clearExerciseHighlights } from '../exercise-selector';
+import { isCopilotAvailable, callCopilotWithTimeout } from '../copilot-integration';
+import { generatePedagogicalPrompt, generateCorrection } from '../correction-generator';
 
 // Test data factories
 const createLatexWithExercises = (count: number, overrides: string[] = []): string => {
@@ -599,6 +601,161 @@ Deuxième énoncé
 			assert.strictEqual(structures[0].correction, 'Première correction');
 			assert.strictEqual(structures[1].enonce, 'Deuxième énoncé');
 			assert.strictEqual(structures[1].correction, undefined);
+		});
+	});
+
+	suite('Copilot Integration', () => {
+		test('[P1] should return true when Copilot Chat API is available', async () => {
+			// GIVEN: Copilot API is available
+			const sandbox = sinon.createSandbox();
+			const mockModel = {
+				sendRequest: sandbox.stub(),
+				name: 'test',
+				id: 'test',
+				vendor: 'copilot',
+				family: 'gpt-4',
+				version: '1',
+				maxInputTokens: 1000,
+				maxOutputTokens: 1000
+			};
+			sandbox.stub(vscode.lm, 'selectChatModels').resolves([mockModel as any]);
+
+			// WHEN: Checking Copilot availability
+			const available = await isCopilotAvailable();
+
+			// THEN: Returns true
+			assert.strictEqual(available, true);
+			sandbox.restore();
+		});
+
+		test('[P1] should return false when Copilot Chat API is not available', async () => {
+			// GIVEN: Copilot API is not available
+			const sandbox = sinon.createSandbox();
+			sandbox.stub(vscode.lm, 'selectChatModels').resolves([]);
+
+			// WHEN: Checking Copilot availability
+			const available = await isCopilotAvailable();
+
+			// THEN: Returns false
+			assert.strictEqual(available, false);
+			sandbox.restore();
+		});
+
+		test('[P1] should call Copilot with messages and return response within timeout', async () => {
+			// GIVEN: Mock Copilot response
+			const sandbox = sinon.createSandbox();
+			const mockResponse = { text: 'Mock correction response' };
+			const mockModel = {
+				sendRequest: sandbox.stub().resolves(mockResponse),
+				name: 'test',
+				id: 'test',
+				vendor: 'copilot',
+				family: 'gpt-4',
+				version: '1',
+				maxInputTokens: 1000,
+				maxOutputTokens: 1000
+			};
+			sandbox.stub(vscode.lm, 'selectChatModels').resolves([mockModel as any]);
+
+			// WHEN: Calling Copilot with timeout
+			const messages = [vscode.LanguageModelChatMessage.User('Test message')];
+			const response = await callCopilotWithTimeout(messages, 30000);
+
+			// THEN: Returns the response
+			assert.strictEqual(response, mockResponse);
+			assert.ok(mockModel.sendRequest.calledOnce);
+			sandbox.restore();
+		});
+
+		test('[P2] should timeout and throw error when Copilot takes too long', async () => {
+			// GIVEN: Mock slow Copilot response
+			const sandbox = sinon.createSandbox();
+			const mockModel = {
+				sendRequest: sandbox.stub().callsFake(() => new Promise(resolve => setTimeout(() => resolve({ text: 'response' }), 40000))),
+				name: 'test',
+				id: 'test',
+				vendor: 'copilot',
+				family: 'gpt-4',
+				version: '1',
+				maxInputTokens: 1000,
+				maxOutputTokens: 1000
+			};
+			sandbox.stub(vscode.lm, 'selectChatModels').resolves([mockModel as any]);
+
+			// WHEN & THEN: Calling Copilot with short timeout should throw
+			const messages = [vscode.LanguageModelChatMessage.User('Test message')];
+			await assert.rejects(async () => {
+				await callCopilotWithTimeout(messages, 1000);
+			}, /timeout/i);
+			sandbox.restore();
+		});
+	});
+
+	suite('Correction Generator', () => {
+		let sandbox: sinon.SinonSandbox;
+
+		suiteSetup(() => {
+			sandbox = sinon.createSandbox();
+		});
+
+		suiteTeardown(() => {
+			sandbox.restore();
+		});
+
+		test('[P1] should generate pedagogical prompt from exercise content', () => {
+			// GIVEN: Exercise content
+			const exerciseContent = `\\begin{exercice}
+\\begin{enonce}
+Résoudre l'équation x + 1 = 0
+\\end{enonce}
+\\end{exercice}`;
+
+			// WHEN: Generating pedagogical prompt
+			const prompt = generatePedagogicalPrompt(exerciseContent);
+
+			// THEN: Returns a prompt string containing exercise content
+			assert.ok(typeof prompt === 'string');
+			assert.ok(prompt.includes('x + 1 = 0'));
+			assert.ok(prompt.includes('pédagogique'));
+		});
+
+		test('[P1] should generate correction using Copilot', async () => {
+			// GIVEN: Mock Copilot API
+			const mockResponse = {
+				text: (async function* () {
+					yield 'La solution est x = -1';
+				})()
+			};
+			const mockModel = {
+				sendRequest: sandbox.stub().resolves(mockResponse),
+				name: 'test',
+				id: 'test',
+				vendor: 'copilot',
+				family: 'gpt-4',
+				version: '1',
+				maxInputTokens: 1000,
+				maxOutputTokens: 1000
+			};
+			sandbox.stub(vscode.lm, 'selectChatModels').resolves([mockModel as any]);
+
+			// WHEN: Generating correction
+			const correction = await generateCorrection('Mock exercise content');
+
+			// THEN: Returns correction with proper LaTeX tags
+			assert.ok(typeof correction === 'string');
+			assert.ok(correction.includes('\\begin{correction}'));
+			assert.ok(correction.includes('\\end{correction}'));
+			assert.ok(correction.includes('La solution est x = -1'));
+		});
+
+		test('[P2] should handle Copilot unavailability gracefully', async () => {
+			// GIVEN: Copilot not available
+			sandbox.stub(vscode.lm, 'selectChatModels').resolves([]);
+
+			// WHEN & THEN: Generating correction should throw
+			await assert.rejects(async () => {
+				await generateCorrection('Mock exercise content');
+			}, /Copilot not available/i);
 		});
 	});
 });

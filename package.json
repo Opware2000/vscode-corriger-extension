@@ -19,6 +19,10 @@
       {
         "command": "vscode-corriger-extension.detectExercises",
         "title": "Détecter les exercices LaTeX"
+      },
+      {
+        "command": "vscode-corriger-extension.generateCorrection",
+        "title": "Générer une correction pour l'exercice sélectionné"
       }
     ]
   },

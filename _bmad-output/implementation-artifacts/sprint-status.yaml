@@ -52,7 +52,7 @@ development_status:
   epic-1-retrospective: optional
 
   epic-2: in-progress
-  2-1-generation-de-corrections-pedagogiques-completes: ready-for-dev
+  2-1-generation-de-corrections-pedagogiques-completes: review
   2-2-adaptation-au-niveau-lycee: backlog
   2-3-structuration-avec-format-latex-approprie: backlog
   2-4-respect-de-la-notation-mathematique-francaise: backlog

@@ -1,6 +1,6 @@
 # Story 2.1: Génération de corrections pédagogiques complètes
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,22 +19,22 @@ So that j'obtiens des solutions détaillées et pédagogiques.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Intégrer l'API Copilot Chat pour génération de corrections (AC: 1)
-  - [ ] Subtask 1.1: Configurer l'accès à l'API Copilot Chat
-  - [ ] Subtask 1.2: Créer une fonction de génération de prompt pédagogique
-  - [ ] Subtask 1.3: Implémenter l'appel à Copilot avec timeout 30s
-- [ ] Task 2: Parser et analyser l'exercice LaTeX (AC: 1)
-  - [ ] Subtask 2.1: Extraire le contenu de l'exercice entre \begin{exercice} et \end{exercice}
-  - [ ] Subtask 2.2: Analyser la structure (énoncé, questions)
-  - [ ] Subtask 2.3: Détecter le niveau pédagogique si indiqué
-- [ ] Task 3: Générer et insérer la correction (AC: 1)
-  - [ ] Subtask 3.1: Créer le prompt adapté au niveau lycée
-  - [ ] Subtask 3.2: Générer la correction via Copilot
-  - [ ] Subtask 3.3: Insérer \begin{correction}...\end{correction} après l'exercice
-- [ ] Task 4: Gestion d'erreurs et fallback (AC: 1)
-  - [ ] Subtask 4.1: Gérer l'indisponibilité de Copilot
-  - [ ] Subtask 4.2: Afficher message d'erreur en français
-  - [ ] Subtask 4.3: Proposer alternatives ou retry
+- [x] Task 1: Intégrer l'API Copilot Chat pour génération de corrections (AC: 1)
+   - [x] Subtask 1.1: Configurer l'accès à l'API Copilot Chat
+   - [x] Subtask 1.2: Créer une fonction de génération de prompt pédagogique
+   - [x] Subtask 1.3: Implémenter l'appel à Copilot avec timeout 30s
+- [x] Task 2: Parser et analyser l'exercice LaTeX (AC: 1)
+   - [x] Subtask 2.1: Extraire le contenu de l'exercice entre \begin{exercice} et \end{exercice}
+   - [x] Subtask 2.2: Analyser la structure (énoncé, questions)
+   - [x] Subtask 2.3: Détecter le niveau pédagogique si indiqué
+- [x] Task 3: Générer et insérer la correction (AC: 1)
+   - [x] Subtask 3.1: Créer le prompt adapté au niveau lycée
+   - [x] Subtask 3.2: Générer la correction via Copilot
+   - [x] Subtask 3.3: Insérer \begin{correction}...\end{correction} après l'exercice
+- [x] Task 4: Gestion d'erreurs et fallback (AC: 1)
+   - [x] Subtask 4.1: Gérer l'indisponibilité de Copilot
+   - [x] Subtask 4.2: Afficher message d'erreur en français
+   - [x] Subtask 4.3: Proposer alternatives ou retry
 
 ## Dev Notes
 
@@ -84,4 +84,23 @@ x-ai/grok-code-fast-1
 
 ### Completion Notes List
 
+- Implémenté l'intégration Copilot Chat avec API vscode.lm
+- Créé src/copilot-integration.ts avec fonctions isCopilotAvailable et callCopilotWithTimeout
+- Créé src/correction-generator.ts avec generatePedagogicalPrompt et generateCorrection
+- Ajouté commande generateCorrection dans extension.ts pour générer et insérer corrections
+- Ajouté nouvelle commande dans package.json
+- Parsing LaTeX déjà implémenté dans src/latex-parser.ts
+- Ajouté tests unitaires pour les nouvelles fonctionnalités
+- Timeout de 30 secondes configuré pour les appels Copilot
+
 ### File List
+
+- src/copilot-integration.ts (nouveau)
+- src/correction-generator.ts (nouveau)
+- src/extension.ts (modifié)
+- package.json (modifié)
+- src/test/extension.test.ts (modifié)
+
+## Change Log
+
+- Implémentation complète de la génération de corrections pédagogiques avec Copilot Chat (2026-01-17)
