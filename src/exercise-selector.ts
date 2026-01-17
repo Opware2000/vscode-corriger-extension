@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { Exercise } from './latex-parser';
-import { detectExercises as detectExercisesFromContent } from './latex-parser';
 import { DECORATION_STYLES, MESSAGES } from './constants';
 
 /**

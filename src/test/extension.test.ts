@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as sinon from 'sinon';
 import { getActiveDocumentContent } from '../document-access';
-import { detectExercises, parseExerciseStructure, Exercise, ExerciseStructure } from '../latex-parser';
+import { detectExercises, parseExerciseStructure, Exercise } from '../latex-parser';
 import { selectExercise, highlightExercise, clearExerciseHighlights } from '../exercise-selector';
 
 // Test data factories
