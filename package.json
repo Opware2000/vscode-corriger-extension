@@ -25,6 +25,14 @@
         "title": "Générer une correction pour l'exercice sélectionné"
       }
     ],
+    "keybindings": [
+      {
+        "command": "vscode-corriger-extension.generateCorrection",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c",
+        "when": "editorTextFocus && resourceExtname == .tex"
+      }
+    ],
     "configuration": {
       "title": "VSCode Corriger Extension",
       "properties": {
@@ -63,6 +71,36 @@
           ],
           "default": "info",
           "description": "Niveau de verbosité des logs"
+        },
+        "vscode-corriger-extension.openaiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Clé API OpenAI pour la génération de corrections"
+        },
+        "vscode-corriger-extension.openaiModel": {
+          "type": "string",
+          "enum": [
+            "gpt-4",
+            "gpt-4-turbo",
+            "gpt-3.5-turbo"
+          ],
+          "default": "gpt-4",
+          "description": "Modèle OpenAI à utiliser pour la génération de corrections"
+        },
+        "vscode-corriger-extension.openaiTimeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "Timeout en millisecondes pour les appels à OpenAI"
+        },
+        "vscode-corriger-extension.enableCorrectionCache": {
+          "type": "boolean",
+          "default": true,
+          "description": "Activer le cache des corrections générées"
+        },
+        "vscode-corriger-extension.correctionCacheSize": {
+          "type": "number",
+          "default": 50,
+          "description": "Taille maximale du cache des corrections"
         }
       }
     }
@@ -98,5 +136,8 @@
     "typescript-eslint": "^8.52.0",
     "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "openai": "^6.16.0"
   }
 }

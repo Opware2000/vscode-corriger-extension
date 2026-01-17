@@ -28,6 +28,16 @@ export class CopilotError extends ExtensionError {
 }
 
 /**
+ * Erreur liée à OpenAI
+ */
+export class OpenAIError extends ExtensionError {
+    constructor(message: string, code: string = 'OPENAI_ERROR') {
+        super(message, code, true);
+        this.name = 'OpenAIError';
+    }
+}
+
+/**
  * Erreur de rate limiting
  */
 export class RateLimitError extends ExtensionError {

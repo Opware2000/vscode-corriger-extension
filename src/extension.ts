@@ -7,7 +7,7 @@ import { selectExercise, clearExerciseHighlights } from './exercise-selector';
 import { generateCorrection } from './correction-generator';
 import { MESSAGES } from './constants';
 import { logger } from './logger';
-import { CopilotError, RateLimitError, CancellationError } from './errors';
+import { CopilotError, RateLimitError, CancellationError, OpenAIError } from './errors';
 import { Exercise } from './latex-parser';
 
 /**
@@ -64,7 +64,7 @@ async function selectAndValidateExercise(exercises: Exercise[]): Promise<Exercis
 }
 
 /**
- * Génère et insère la correction dans le document
+ * Génère et insère la correction dans le document avec prévisualisation
  * @param exercise L'exercice pour lequel générer la correction
  * @param progress Objet de progression pour mettre à jour l'UI
  * @param token Token d'annulation
@@ -72,9 +72,26 @@ async function selectAndValidateExercise(exercises: Exercise[]): Promise<Exercis
 async function generateAndInsertCorrection(exercise: Exercise, progress: vscode.Progress<{ increment: number; message: string }>, token: vscode.CancellationToken): Promise<void> {
 	progress.report({ increment: 0, message: 'Préparation...' });
 
-	const correction = await generateCorrection(exercise.content, token);
+	let correction = await generateCorrection(exercise.content, token);
 
-	progress.report({ increment: 100, message: 'Insertion de la correction...' });
+	progress.report({ increment: 100, message: 'Prévisualisation...' });
+
+	// Afficher la prévisualisation et demander confirmation
+	const previewResult = await showCorrectionPreview(correction);
+	if (previewResult === 'cancel') {
+		return;
+	}
+	if (previewResult === 'regenerate') {
+		// Régénérer la correction
+		progress.report({ increment: 50, message: 'Régénération...' });
+		correction = await generateCorrection(exercise.content, token);
+		progress.report({ increment: 100, message: 'Prévisualisation...' });
+
+		const secondPreview = await showCorrectionPreview(correction);
+		if (secondPreview !== 'insert') {
+			return;
+		}
+	}
 
 	// Insérer la correction dans le document
 	const editor = vscode.window.activeTextEditor;
@@ -93,6 +110,40 @@ async function generateAndInsertCorrection(exercise: Exercise, progress: vscode.
 }
 
 /**
+ * Affiche une prévisualisation de la correction et retourne l'action choisie
+ * @param correction La correction à prévisualiser
+ * @returns 'insert', 'regenerate', ou 'cancel'
+ */
+async function showCorrectionPreview(correction: string): Promise<'insert' | 'regenerate' | 'cancel'> {
+	// Pour les corrections longues, afficher dans le canal de sortie
+	const outputChannel = vscode.window.createOutputChannel('Correction Preview');
+	outputChannel.clear();
+	outputChannel.appendLine('=== PRÉVISUALISATION DE LA CORRECTION ===');
+	outputChannel.appendLine(correction);
+	outputChannel.show();
+
+	// Demander confirmation avec des boutons
+	const result = await vscode.window.showInformationMessage(
+		'Correction générée. Consultez l\'onglet "Correction Preview" pour la prévisualisation.',
+		{ modal: false },
+		'Insérer',
+		'Régénérer',
+		'Annuler'
+	);
+
+	outputChannel.dispose();
+
+	switch (result) {
+		case 'Insérer':
+			return 'insert';
+		case 'Régénérer':
+			return 'regenerate';
+		default:
+			return 'cancel';
+	}
+}
+
+/**
  * Gère les erreurs de génération de correction
  * @param error L'erreur à traiter
  */
@@ -103,6 +154,8 @@ function handleCorrectionError(error: unknown): void {
 	// Gérer les erreurs spécifiques
 	if (error instanceof CopilotError) {
 		vscode.window.showErrorMessage(MESSAGES.COPILOT_UNAVAILABLE);
+	} else if (error instanceof OpenAIError) {
+		vscode.window.showErrorMessage(errorMessage);
 	} else if (error instanceof RateLimitError) {
 		vscode.window.showErrorMessage(MESSAGES.RATE_LIMIT_EXCEEDED);
 	} else if (error instanceof CancellationError) {

@@ -8,7 +8,7 @@ import { getActiveDocumentContent } from '../document-access';
 import { detectExercises, parseExerciseStructure, Exercise } from '../latex-parser';
 import { selectExercise, highlightExercise, clearExerciseHighlights } from '../exercise-selector';
 import { isCopilotAvailable, callCopilotWithTimeout } from '../copilot-integration';
-import { generatePedagogicalPrompt, generateCorrection } from '../correction-generator';
+import { generateCorrection } from '../correction-generator';
 
 // Test data factories
 const createLatexWithExercises = (count: number, overrides: string[] = []): string => {
@@ -702,41 +702,34 @@ Deuxième énoncé
 			sandbox.restore();
 		});
 
-		test('[P1] should generate pedagogical prompt from exercise content', () => {
-			// GIVEN: Exercise content
-			const exerciseContent = `\\begin{exercice}
-\\begin{enonce}
-Résoudre l'équation x + 1 = 0
-\\end{enonce}
-\\end{exercice}`;
 
-			// WHEN: Generating pedagogical prompt
-			const prompt = generatePedagogicalPrompt(exerciseContent);
-
-			// THEN: Returns a prompt string containing exercise content
-			assert.ok(typeof prompt === 'string');
-			assert.ok(prompt.includes('x + 1 = 0'));
-			assert.ok(prompt.includes('pédagogique'));
-		});
-
-		test('[P1] should generate correction using Copilot', async () => {
-			// GIVEN: Mock Copilot API
-			const mockResponse = {
-				text: (async function* () {
-					yield 'La solution est x = -1';
-				})()
+		test('[P1] should generate correction using OpenAI', async () => {
+			// GIVEN: Mock OpenAI API
+			const mockOpenAIResponse = {
+				choices: [{
+					message: {
+						content: 'La solution est x = -1'
+					}
+				}]
 			};
-			const mockModel = {
-				sendRequest: sandbox.stub().resolves(mockResponse),
-				name: 'test',
-				id: 'test',
-				vendor: 'copilot',
-				family: 'gpt-4',
-				version: '1',
-				maxInputTokens: 1000,
-				maxOutputTokens: 1000
+			const mockOpenAIClient = {
+				chat: {
+					completions: {
+						create: sandbox.stub().resolves(mockOpenAIResponse)
+					}
+				}
 			};
-			sandbox.stub(vscode.lm, 'selectChatModels').resolves([mockModel as any]);
+			// Mock the OpenAI constructor and getConfig
+			sandbox.stub(require('openai'), 'default').returns(mockOpenAIClient);
+			sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+				get: sandbox.stub().callsFake((key: string) => {
+					if (key === 'openaiApiKey') return 'test-key';
+					if (key === 'openaiModel') return 'gpt-4';
+					if (key === 'openaiTimeout') return 30000;
+					if (key === 'enableCorrectionCache') return false;
+					return undefined;
+				})
+			} as any);
 
 			// WHEN: Generating correction
 			const correction = await generateCorrection('Mock exercise content');
@@ -748,14 +741,19 @@ Résoudre l'équation x + 1 = 0
 			assert.ok(correction.includes('La solution est x = -1'));
 		});
 
-		test('[P2] should handle Copilot unavailability gracefully', async () => {
-			// GIVEN: Copilot not available
-			sandbox.stub(vscode.lm, 'selectChatModels').resolves([]);
+		test('[P2] should handle OpenAI configuration error gracefully', async () => {
+			// GIVEN: OpenAI API key not configured
+			sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+				get: sandbox.stub().callsFake((key: string) => {
+					if (key === 'openaiApiKey') return '';
+					return undefined;
+				})
+			} as any);
 
 			// WHEN & THEN: Generating correction should throw
 			await assert.rejects(async () => {
 				await generateCorrection('Mock exercise content');
-			}, /Copilot not available/i);
+			}, /Clé API OpenAI non configurée/i);
 		});
 	});
 });
