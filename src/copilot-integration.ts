@@ -55,9 +55,15 @@ export async function callCopilotWithTimeout(
         throw new Error(MESSAGES.RATE_LIMIT_EXCEEDED);
     }
 
-    const models = await vscode.lm.selectChatModels({ vendor: 'copilot' });
+    const copilotFamily = getConfig('copilotModel', 'gpt-4');
+    const models = await vscode.lm.selectChatModels({ vendor: 'copilot', family: copilotFamily });
     if (models.length === 0) {
-        throw new Error(MESSAGES.COPILOT_UNAVAILABLE);
+        // Fallback to any copilot model if specific family not available
+        const fallbackModels = await vscode.lm.selectChatModels({ vendor: 'copilot' });
+        if (fallbackModels.length === 0) {
+            throw new Error(MESSAGES.COPILOT_UNAVAILABLE);
+        }
+        models.push(...fallbackModels);
     }
 
     const model = models[0];

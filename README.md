@@ -69,8 +69,8 @@ L'extension propose plusieurs paramètres configurables :
 
 ### `vscode-corriger-extension.openaiModel`
 - **Type** : `string`
-- **Options** : `"gpt-4"`, `"gpt-4-turbo"`, `"gpt-3.5-turbo"`
-- **Défaut** : `"gpt-4"`
+- **Options** : `"gpt-4o"`, `"gpt-4o-mini"`, `"gpt-4-turbo"`, `"gpt-4"`, `"gpt-3.5-turbo"`
+- **Défaut** : `"gpt-4o"`
 - **Description** : Modèle OpenAI à utiliser pour la génération de corrections
 
 ### `vscode-corriger-extension.openaiTimeout`
@@ -93,6 +93,12 @@ L'extension propose plusieurs paramètres configurables :
 - **Options** : `"openai"`, `"copilot"`
 - **Défaut** : `"openai"`
 - **Description** : Fournisseur d'IA à utiliser pour la génération de corrections. Copilot est recommandé pour une meilleure sécurité car il utilise l'abonnement GitHub Copilot de l'utilisateur sans clé API externe.
+
+### `vscode-corriger-extension.copilotModel`
+- **Type** : `string`
+- **Options** : `"gpt-4o"`, `"gpt-4-turbo"`, `"gpt-4"`, `"gpt-3.5-turbo"`
+- **Défaut** : `"gpt-4"`
+- **Description** : Famille de modèle Copilot à privilégier pour la génération de corrections
 
 ### `vscode-corriger-extension.enableCache`
 - **Type** : `boolean`
