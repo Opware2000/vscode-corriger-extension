@@ -1,6 +1,4 @@
-import * as vscode from 'vscode';
 import { createHash } from 'crypto';
-import { LIMITS } from './constants';
 import { logger } from './logger';
 import { configService } from './config-service';
 

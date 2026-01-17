@@ -605,9 +605,18 @@ Deuxième énoncé
 	});
 
 	suite('Copilot Integration', () => {
+		let sandbox: sinon.SinonSandbox;
+
+		suiteSetup(() => {
+			sandbox = sinon.createSandbox();
+		});
+
+		suiteTeardown(() => {
+			sandbox.restore();
+		});
+
 		test('[P1] should return true when Copilot Chat API is available', async () => {
 			// GIVEN: Copilot API is available
-			const sandbox = sinon.createSandbox();
 			const mockModel = {
 				sendRequest: sandbox.stub(),
 				name: 'test',
@@ -625,12 +634,10 @@ Deuxième énoncé
 
 			// THEN: Returns true
 			assert.strictEqual(available, true);
-			sandbox.restore();
 		});
 
 		test('[P1] should return false when Copilot Chat API is not available', async () => {
 			// GIVEN: Copilot API is not available
-			const sandbox = sinon.createSandbox();
 			sandbox.stub(vscode.lm, 'selectChatModels').resolves([]);
 
 			// WHEN: Checking Copilot availability
@@ -638,12 +645,10 @@ Deuxième énoncé
 
 			// THEN: Returns false
 			assert.strictEqual(available, false);
-			sandbox.restore();
 		});
 
 		test('[P1] should call Copilot with messages and return response within timeout', async () => {
 			// GIVEN: Mock Copilot response
-			const sandbox = sinon.createSandbox();
 			const mockResponse = { text: 'Mock correction response' };
 			const mockModel = {
 				sendRequest: sandbox.stub().resolves(mockResponse),
@@ -664,12 +669,10 @@ Deuxième énoncé
 			// THEN: Returns the response
 			assert.strictEqual(response, mockResponse);
 			assert.ok(mockModel.sendRequest.calledOnce);
-			sandbox.restore();
 		});
 
 		test('[P2] should timeout and throw error when Copilot takes too long', async () => {
 			// GIVEN: Mock slow Copilot response
-			const sandbox = sinon.createSandbox();
 			const mockModel = {
 				sendRequest: sandbox.stub().callsFake(() => new Promise(resolve => setTimeout(() => resolve({ text: 'response' }), 40000))),
 				name: 'test',
@@ -687,7 +690,6 @@ Deuxième énoncé
 			await assert.rejects(async () => {
 				await callCopilotWithTimeout(messages, 1000);
 			}, /timeout/i);
-			sandbox.restore();
 		});
 	});
 
@@ -704,7 +706,6 @@ Deuxième énoncé
 
 		test('[P1] should generate pedagogical prompt with French adaptations using default config', () => {
 			// GIVEN: Mock empty configuration (uses default)
-			const sandbox = sinon.createSandbox();
 			sandbox.stub(vscode.workspace, 'getConfiguration').returns({
 				get: sandbox.stub().returns('')
 			} as any);
@@ -730,13 +731,10 @@ Deuxième énoncé
 			assert.ok(prompt.includes('donc')); // French vocabulary
 			assert.ok(prompt.includes('car')); // French vocabulary
 			assert.ok(prompt.includes(exerciseContent));
-
-			sandbox.restore();
 		});
 
 		test('[P1] should use custom pedagogical prompt from configuration', () => {
 			// GIVEN: Mock custom configuration
-			const sandbox = sinon.createSandbox();
 			const customPrompt = 'Custom prompt with {{exerciseContent}} placeholder';
 			sandbox.stub(vscode.workspace, 'getConfiguration').returns({
 				get: sandbox.stub().returns(customPrompt)
@@ -750,8 +748,6 @@ Deuxième énoncé
 
 			// THEN: Uses custom prompt with placeholder replaced
 			assert.strictEqual(prompt, 'Custom prompt with Test exercise content placeholder');
-
-			sandbox.restore();
 		});
 
 		test('[P1] should generate correction using OpenAI', async () => {
@@ -774,10 +770,18 @@ Deuxième énoncé
 			sandbox.stub(require('openai'), 'default').returns(mockOpenAIClient);
 			sandbox.stub(vscode.workspace, 'getConfiguration').returns({
 				get: sandbox.stub().callsFake((key: string) => {
-					if (key === 'openaiApiKey') return 'test-key';
-					if (key === 'openaiModel') return 'gpt-4';
-					if (key === 'openaiTimeout') return 30000;
-					if (key === 'enableCorrectionCache') return false;
+					if (key === 'openaiApiKey') {
+						return 'test-key';
+					}
+					if (key === 'openaiModel') {
+						return 'gpt-4';
+					}
+					if (key === 'openaiTimeout') {
+						return 30000;
+					}
+					if (key === 'enableCorrectionCache') {
+						return false;
+					}
 					return undefined;
 				})
 			} as any);
@@ -796,7 +800,9 @@ Deuxième énoncé
 			// GIVEN: OpenAI API key not configured
 			sandbox.stub(vscode.workspace, 'getConfiguration').returns({
 				get: sandbox.stub().callsFake((key: string) => {
-					if (key === 'openaiApiKey') return '';
+					if (key === 'openaiApiKey') {
+						return '';
+					}
 					return undefined;
 				})
 			} as any);

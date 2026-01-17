@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { getActiveDocumentContent } from './document-access';
-import { detectExercises, parseExerciseStructure } from './latex-parser';
+import { detectExercises } from './latex-parser';
 import { selectExercise, clearExerciseHighlights } from './exercise-selector';
 import { generateCorrection } from './correction-generator';
 import { MESSAGES } from './constants';
@@ -45,13 +45,6 @@ async function selectAndValidateExercise(exercises: Exercise[]): Promise<Exercis
 	try {
 		const selectedExercise = await selectExercise(exercises);
 		if (!selectedExercise) {
-			return null;
-		}
-
-		// Vérifier si l'exercice a déjà une correction
-		const structure = parseExerciseStructure(selectedExercise.content);
-		if (structure.correction) {
-			vscode.window.showInformationMessage(MESSAGES.EXERCISE_ALREADY_CORRECTED);
 			return null;
 		}
 

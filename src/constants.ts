@@ -31,6 +31,7 @@ export const MESSAGES = {
     RATE_LIMIT_EXCEEDED: 'Trop de requêtes. Veuillez patienter avant de réessayer.',
     CORRECTION_GENERATED: 'Correction générée et insérée avec succès.',
     EXERCISE_ALREADY_CORRECTED: 'Cet exercice a déjà une correction.',
+    ALL_EXERCISES_CORRECTED: 'Tous les exercices détectés ont déjà une correction.',
 } as const;
 
 // Error codes

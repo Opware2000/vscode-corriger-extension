@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import OpenAI from 'openai';
-import { MESSAGES, TIMEOUTS, LIMITS } from './constants';
+import { MESSAGES, TIMEOUTS } from './constants';
 import { logger } from './logger';
 import { getConfig } from './config';
 
@@ -54,11 +54,15 @@ function generateCacheKey(exerciseContent: string): string {
  */
 function getCachedCorrection(exerciseContent: string): string | null {
     const enableCache = getConfig('enableCorrectionCache', true);
-    if (!enableCache) return null;
+    if (!enableCache) {
+        return null;
+    }
 
     const key = generateCacheKey(exerciseContent);
     const entry = correctionCache.get(key);
-    if (!entry) return null;
+    if (!entry) {
+        return null;
+    }
 
     // Check if cache entry is still valid (e.g., 1 hour)
     const cacheExpiry = 60 * 60 * 1000; // 1 hour
@@ -75,7 +79,9 @@ function getCachedCorrection(exerciseContent: string): string | null {
  */
 function cacheCorrection(exerciseContent: string, correction: string): void {
     const enableCache = getConfig('enableCorrectionCache', true);
-    if (!enableCache) return;
+    if (!enableCache) {
+        return;
+    }
 
     const key = generateCacheKey(exerciseContent);
     const entrySize = estimateMemorySize({ exerciseContent, correction, timestamp: Date.now() });

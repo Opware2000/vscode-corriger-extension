@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Exercise } from './latex-parser';
+import { Exercise, ExerciseStatus } from './latex-parser';
 import { DECORATION_STYLES, MESSAGES } from './constants';
 
 /**
@@ -52,12 +52,19 @@ export function clearExerciseHighlights(): void {
  * @returns L'exercice sélectionné ou undefined si annulé
  */
 export async function selectExercise(exercises: Exercise[]): Promise<Exercise | undefined> {
-    if (exercises.length === 0) {
-        vscode.window.showInformationMessage(MESSAGES.NO_EXERCISES_FOUND);
+    // Filtrer les exercices déjà corrigés (ne montrer que les PENDING)
+    const pendingExercises = exercises.filter(exercise => exercise.status === ExerciseStatus.PENDING);
+
+    if (pendingExercises.length === 0) {
+        if (exercises.length > 0) {
+            vscode.window.showInformationMessage(MESSAGES.ALL_EXERCISES_CORRECTED);
+        } else {
+            vscode.window.showInformationMessage(MESSAGES.NO_EXERCISES_FOUND);
+        }
         return undefined;
     }
 
-    const items: ExerciseQuickPickItem[] = exercises.map(exercise => ({
+    const items: ExerciseQuickPickItem[] = pendingExercises.map(exercise => ({
         label: `Exercice ${exercise.number}`,
         description: exercise.title,
         detail: MESSAGES.EXERCISE_DETAIL(exercise.start, exercise.end),
