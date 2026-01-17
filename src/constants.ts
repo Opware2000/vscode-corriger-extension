@@ -52,11 +52,7 @@ export const FRENCH_MATH_NOTATIONS = {
     MEAN: '\\bar{x}', // Moyenne
     MEDIAN: 'Me', // Médiane
     MODE: 'Mo', // Mode
-    INTEGRAL: '\\int', // Intégrale
-    DERIVATIVE: '\\frac{d}{dx}', // Dérivée
     LIMIT: '\\lim', // Limite
-    SUM: '\\sum', // Somme
-    PRODUCT: '\\prod', // Produit
     INTERVAL_OPEN: ']a,b[', // Intervalle ouvert
     INTERVAL_CLOSED: '[a,b]', // Intervalle fermé
     SET_NATURALS: '\\mathbb{N}', // Ensemble des naturels
@@ -80,8 +76,6 @@ export const FRENCH_MATH_VOCABULARY = {
     THEREFORE: 'donc',
     BECAUSE: 'car',
     SINCE: 'puisque',
-    LET: 'soit',
-    SUCH_THAT: 'tel que',
     FOR_ALL: 'pour tout',
     EXISTS: 'il existe',
     EQUIVALENT: 'équivalent',

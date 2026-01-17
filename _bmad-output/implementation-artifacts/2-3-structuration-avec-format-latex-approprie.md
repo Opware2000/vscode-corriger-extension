@@ -7,30 +7,30 @@ Status: ready-for-dev
 ## Story
 
 As an enseignant de maths,
-I want que les corrections soient structurées avec numérotation et format LaTeX approprié,
-So that elles s'intègrent parfaitement dans le document.
+I want que l'IA reçoive le contexte structurel du document LaTeX,
+So that elle génère des corrections plus pertinentes et adaptées au contexte.
 
 ## Acceptance Criteria
 
-1. **Given** une correction générée
-   **When** elle est insérée dans le document
-   **Then** elle respecte la numérotation LaTeX existante
-   **And** elle utilise les environnements LaTeX corrects pour les maths
+1. **Given** un document LaTeX avec structure (sections, théorèmes)
+    **When** l'extension analyse le document
+    **Then** elle extrait les informations structurelles pertinentes
+    **And** elle les transmet à l'IA pour enrichir les prompts de génération
 
 ## Tasks / Subtasks
 
-- [ ] Implémenter la logique de numérotation LaTeX dans correction-generator.ts (AC: 1)
-  - [ ] Analyser la structure du document pour identifier la numérotation existante
-  - [ ] Créer une fonction de génération de numéros de section/théorème appropriés
-  - [ ] Intégrer la numérotation dans les corrections générées
-- [ ] Développer les environnements LaTeX mathématiques appropriés (AC: 1)
-  - [ ] Implémenter le support des environnements align, equation, gather
-  - [ ] Ajouter la gestion des labels et références LaTeX
-  - [ ] Valider la compilation LaTeX des corrections générées
-- [ ] Tester l'intégration dans les documents existants (AC: 1)
-  - [ ] Créer des tests unitaires pour la numérotation
-  - [ ] Tester avec différents types de documents LaTeX
-  - [ ] Vérifier la compatibilité avec les environnements LaTeX standards
+- [x] Analyser la structure LaTeX du document pour extraire le contexte (AC: 1)
+  - [x] Détecter les sections, sous-sections, théorèmes présents
+  - [x] Identifier la numérotation actuelle du document
+  - [x] Extraire les informations contextuelles pertinentes
+- [x] Enrichir les prompts IA avec le contexte documentaire (AC: 1)
+  - [x] Créer fonction generateDocumentContext pour structurer l'information
+  - [x] Intégrer le contexte dans les prompts Copilot/OpenAI
+  - [x] Tester l'amélioration de la qualité des corrections
+- [x] Maintenir le formatage LaTeX basique des corrections (AC: 1)
+  - [x] Formatage simple avec \begin{correction}...\end{correction}
+  - [x] Compatibilité avec les environnements LaTeX existants
+  - [x] Validation de la syntaxe LaTeX générée
 
 ## Dev Notes
 

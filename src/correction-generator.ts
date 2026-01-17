@@ -36,51 +36,8 @@ export function generatePedagogicalPrompt(exerciseContent: string, documentStruc
         return prompt;
     }
 
-    // Fallback to default prompt if configuration is empty
-    let contextInfo = '';
-    if (documentStructure) {
-        contextInfo = `\n\nContexte du document :\n${generateDocumentContext(documentStructure)}`;
-    }
-
-    return `Vous êtes un professeur de mathématiques expérimenté enseignant en France. Voici un exercice LaTeX du programme français de mathématiques :
-
-${exerciseContent}${contextInfo}
-
-Générez une correction pédagogique complète et détaillée en français, adaptée au niveau lycée. La correction doit :
-
-- Respecter strictement le programme officiel français de mathématiques
-- Utiliser le vocabulaire mathématique français approprié :
-  * ${FRENCH_MATH_VOCABULARY.CALCULATE} au lieu de "calculate"
-  * ${FRENCH_MATH_VOCABULARY.SIMPLIFY} au lieu de "simplify"
-  * ${FRENCH_MATH_VOCABULARY.RESOLVE} au lieu de "solve"
-  * ${FRENCH_MATH_VOCABULARY.DEMONSTRATE} au lieu de "prove"
-  * ${FRENCH_MATH_VOCABULARY.CONCLUDE} au lieu de "conclude"
-  * ${FRENCH_MATH_VOCABULARY.THEREFORE} au lieu de "therefore"
-  * ${FRENCH_MATH_VOCABULARY.BECAUSE} au lieu de "because"
-
-- Respecter les notations mathématiques françaises :
-   * Probabilités conditionnelles : utiliser ${FRENCH_MATH_NOTATIONS.PROBABILITY_CONDITIONAL} au lieu de P(B|A) (exemple : P_A(B) = 0,3)
-   * Espérance : ${FRENCH_MATH_NOTATIONS.EXPECTED_VALUE} (exemple : E[X] = 5)
-   * Variance : ${FRENCH_MATH_NOTATIONS.VARIANCE} (exemple : V(X) = 2,5)
-   * Écart-type : ${FRENCH_MATH_NOTATIONS.STANDARD_DEVIATION} (exemple : σ(X) = 1,58)
-   * Moyenne : ${FRENCH_MATH_NOTATIONS.MEAN} (exemple : $\\bar{x} = 4,2$)
-   * Médiane : ${FRENCH_MATH_NOTATIONS.MEDIAN} (exemple : Me = 3)
-   * Mode : ${FRENCH_MATH_NOTATIONS.MODE} (exemple : Mo = 2)
-   * Intervalles : ${FRENCH_MATH_NOTATIONS.INTERVAL_OPEN} pour ouvert, ${FRENCH_MATH_NOTATIONS.INTERVAL_CLOSED} pour fermé
-   * Ensembles : ${FRENCH_MATH_NOTATIONS.SET_NATURALS} naturels, ${FRENCH_MATH_NOTATIONS.SET_INTEGERS} entiers, ${FRENCH_MATH_NOTATIONS.SET_RATIONALS} rationnels, ${FRENCH_MATH_NOTATIONS.SET_REALS} réels
-   * Fonctions : ${FRENCH_MATH_NOTATIONS.FUNCTION_NOTATION} (exemple : f: x ↦ x²)
-   * Nombres décimaux : utiliser la virgule (3,14 au lieu de 3.14)
-   * Grands nombres : utiliser l'espace (1 000 000 au lieu de 1,000,000)
-
-- Expliquer chaque étape clairement et pédagogiquement
-- Utiliser un langage accessible aux élèves de lycée
-- Inclure des justifications mathématiques rigoureuses
-- Respecter les conventions pédagogiques françaises
-- Être structurée de manière logique et progressive
-- Inclure des diagrammes TikZ si nécessaire pour les problèmes de géométrie
-- Fournir des exemples concrets quand cela aide la compréhension
-
-Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans balises \\begin{correction} ou \\end{correction}.`;
+    // Fallback minimal si configuration vide
+    return `Vous êtes un professeur de mathématiques. Corrigez cet exercice LaTeX : ${exerciseContent}`;
 }
 
 /**
@@ -154,6 +111,12 @@ export async function generateCorrection(
 
         logger.info('Correction générée avec succès');
 
+        // Valider le format TikZ si présent
+        const tikzValidation = validateTikZFormat(correction);
+        if (!tikzValidation.isValid) {
+            logger.warn('Correction contient du TikZ mal formaté', { errors: tikzValidation.errors });
+        }
+
         // Formater avec environnement LaTeX basique
         return formatCorrectionWithLatexEnvironments(correction.trim());
     } catch (error) {
@@ -176,4 +139,32 @@ export async function generateCorrection(
 
         throw new Error(`Erreur lors de la génération de correction: ${errorMessage}`);
     }
+}
+
+/**
+ * Valide le format TikZ dans une correction LaTeX
+ */
+function validateTikZFormat(correction: string): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    // Compter les \begin{tikzpicture} et \end{tikzpicture}
+    const beginCount = (correction.match(/\\begin{tikzpicture}/g) || []).length;
+    const endCount = (correction.match(/\\end{tikzpicture}/g) || []).length;
+
+    if (beginCount !== endCount) {
+        errors.push(`Nombre d'environnements TikZ déséquilibré: ${beginCount} begin, ${endCount} end`);
+    }
+
+    // Vérifier les blocs TikZ mal fermés
+    const tikzBlocks = correction.split(/\\begin{tikzpicture}/);
+    for (let i = 1; i < tikzBlocks.length; i++) {
+        if (!tikzBlocks[i].includes('\\end{tikzpicture}')) {
+            errors.push(`Bloc TikZ ${i} non fermé`);
+        }
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
 }
