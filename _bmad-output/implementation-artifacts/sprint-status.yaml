@@ -48,13 +48,13 @@ development_status:
   1-0-configuration-initiale-du-projet-avec-starter-template-vs-code: review
   1-1-detection-automatique-des-exercices-latex: review
   1-2-selection-d-un-exercice-specifique: review
-  1-3-identification-des-exercices-deja-corriges: in-progress
+  1-3-identification-des-exercices-deja-corriges: done
   epic-1-retrospective: optional
 
   epic-2: in-progress
-  2-1-generation-de-corrections-pedagogiques-completes: review
-  2-2-adaptation-au-niveau-lycee: review
-  2-3-structuration-avec-format-latex-approprie: ready-for-dev
+  2-1-generation-de-corrections-pedagogiques-completes: done
+  2-2-adaptation-au-niveau-lycee: done
+  2-3-structuration-avec-format-latex-approprie: done
   2-4-respect-de-la-notation-mathematique-francaise: ready-for-dev
   epic-2-retrospective: optional
 
