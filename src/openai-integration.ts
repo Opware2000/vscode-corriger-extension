@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import OpenAI from 'openai';
 import { MESSAGES, TIMEOUTS, LIMITS } from './constants';
 import { logger } from './logger';
+import { getConfig } from './config';
 
 // Cache for corrections
 interface CorrectionCacheEntry {
@@ -12,12 +13,13 @@ interface CorrectionCacheEntry {
 
 let correctionCache: Map<string, CorrectionCacheEntry> = new Map();
 
-/**
- * Get configuration value with fallback to default
- */
-function getConfig<T>(key: string, defaultValue: T): T {
-    const config = vscode.workspace.getConfiguration('vscode-corriger-extension');
-    return config.get(key, defaultValue);
+// Ajout d'une limite de taille mémoire pour le cache
+const MAX_CACHE_MEMORY_SIZE = 50 * 1024 * 1024; // 50MB
+let currentCacheSize = 0;
+
+// Fonction pour estimer la taille mémoire d'une entrée
+function estimateMemorySize(entry: CorrectionCacheEntry): number {
+    return (entry.exerciseContent.length + entry.correction.length) * 2; // Approximation en bytes
 }
 
 /**
@@ -76,12 +78,16 @@ function cacheCorrection(exerciseContent: string, correction: string): void {
     if (!enableCache) return;
 
     const key = generateCacheKey(exerciseContent);
-    const cacheSize = getConfig('correctionCacheSize', LIMITS.CORRECTION_CACHE_SIZE);
+    const entrySize = estimateMemorySize({ exerciseContent, correction, timestamp: Date.now() });
 
-    // Remove oldest entries if cache is full
-    if (correctionCache.size >= cacheSize) {
+    // Éviction si nécessaire
+    while (currentCacheSize + entrySize > MAX_CACHE_MEMORY_SIZE && correctionCache.size > 0) {
         const oldestKey = correctionCache.keys().next().value;
         if (oldestKey) {
+            const removedEntry = correctionCache.get(oldestKey);
+            if (removedEntry) {
+                currentCacheSize -= estimateMemorySize(removedEntry);
+            }
             correctionCache.delete(oldestKey);
         }
     }
@@ -91,6 +97,7 @@ function cacheCorrection(exerciseContent: string, correction: string): void {
         correction,
         timestamp: Date.now()
     });
+    currentCacheSize += entrySize;
 }
 
 /**
@@ -204,5 +211,6 @@ function validateLatexSyntax(correction: string): boolean {
  */
 export function clearCorrectionCache(): void {
     correctionCache.clear();
+    currentCacheSize = 0;
     logger.info('Cache des corrections vidé');
 }

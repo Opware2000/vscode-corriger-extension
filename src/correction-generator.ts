@@ -3,19 +3,18 @@ import { generateCorrectionWithOpenAI } from './openai-integration';
 import { callCopilotWithTimeout, isCopilotAvailable } from './copilot-integration';
 import { MESSAGES, FRENCH_MATH_NOTATIONS, FRENCH_MATH_VOCABULARY } from './constants';
 import { logger } from './logger';
+import { getConfig } from './config';
 
-/**
- * Get configuration value with fallback to default
- */
-function getConfig<T>(key: string, defaultValue: T): T {
-    const config = vscode.workspace.getConfiguration('vscode-corriger-extension');
-    return config.get(key, defaultValue);
-}
 
 /**
  * Génère le prompt pédagogique pour Copilot avec adaptations françaises
- * @param exerciseContent Le contenu de l'exercice LaTeX
- * @returns Le prompt complet pour Copilot
+ * @param exerciseContent Le contenu de l'exercice LaTeX à corriger
+ * @returns Le prompt complet formaté pour Copilot incluant les instructions pédagogiques françaises
+ * @example
+ * ```typescript
+ * const prompt = generatePedagogicalPrompt("\\begin{exercice}\nRésoudre x + 1 = 0\n\\end{exercice}");
+ * // Retourne un prompt détaillé avec vocabulaire mathématique français
+ * ```
  */
 export function generatePedagogicalPrompt(exerciseContent: string): string {
     const config = vscode.workspace.getConfiguration('vscode-corriger-extension');

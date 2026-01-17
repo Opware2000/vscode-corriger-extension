@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { createHash } from 'crypto';
 import { LIMITS } from './constants';
 import { logger } from './logger';
+import { getConfig } from './config';
 
 /**
  * Interface représentant un exercice détecté dans le document LaTeX
@@ -164,13 +165,6 @@ export function detectExercises(content: string): Exercise[] {
     return exercises;
 }
 
-/**
- * Get configuration value with fallback to default
- */
-function getConfig<T>(key: string, defaultValue: T): T {
-    const config = vscode.workspace.getConfiguration('vscode-corriger-extension');
-    return config.get(key, defaultValue);
-}
 
 
 /**

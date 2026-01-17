@@ -1,17 +1,11 @@
 import * as vscode from 'vscode';
 import { TIMEOUTS, LIMITS, MESSAGES } from './constants';
 import { logger } from './logger';
+import { getConfig } from './config';
 
 // Rate limiting state
 let requestTimestamps: number[] = [];
 
-/**
- * Get configuration value with fallback to default
- */
-function getConfig<T>(key: string, defaultValue: T): T {
-    const config = vscode.workspace.getConfiguration('vscode-corriger-extension');
-    return config.get(key, defaultValue);
-}
 
 export async function isCopilotAvailable(): Promise<boolean> {
     try {
@@ -47,53 +41,46 @@ export async function callCopilotWithTimeout(
     timeoutMs?: number,
     cancellationToken?: vscode.CancellationToken
 ): Promise<vscode.LanguageModelChatResponse> {
-    // Use config value if not provided
     const actualTimeout = timeoutMs ?? getConfig('copilotTimeout', TIMEOUTS.COPILOT_REQUEST);
-
-    // Check rate limit
-    if (isRateLimitExceeded()) {
-        throw new Error(MESSAGES.RATE_LIMIT_EXCEEDED);
-    }
-
-    const copilotFamily = getConfig('copilotModel', 'gpt-4');
-    const models = await vscode.lm.selectChatModels({ vendor: 'copilot', family: copilotFamily });
-    if (models.length === 0) {
-        // Fallback to any copilot model if specific family not available
-        const fallbackModels = await vscode.lm.selectChatModels({ vendor: 'copilot' });
-        if (fallbackModels.length === 0) {
-            throw new Error(MESSAGES.COPILOT_UNAVAILABLE);
-        }
-        models.push(...fallbackModels);
-    }
-
-    const model = models[0];
     const tokenSource = new vscode.CancellationTokenSource();
-
-    // Combine external cancellation token with our timeout
     const combinedToken = cancellationToken || tokenSource.token;
 
-    // Set timeout
     const timeoutId = setTimeout(() => {
         tokenSource.cancel();
     }, actualTimeout);
 
     try {
+        // Check rate limit
+        if (isRateLimitExceeded()) {
+            throw new Error(MESSAGES.RATE_LIMIT_EXCEEDED);
+        }
+
+        const copilotFamily = getConfig('copilotModel', 'gpt-4');
+        const models = await vscode.lm.selectChatModels({ vendor: 'copilot', family: copilotFamily });
+        if (models.length === 0) {
+            // Fallback to any copilot model if specific family not available
+            const fallbackModels = await vscode.lm.selectChatModels({ vendor: 'copilot' });
+            if (fallbackModels.length === 0) {
+                throw new Error(MESSAGES.COPILOT_UNAVAILABLE);
+            }
+            models.push(...fallbackModels);
+        }
+
+        const model = models[0];
         recordRequest();
         logger.info(`Appel à Copilot avec timeout de ${actualTimeout}ms`);
         const request = await model.sendRequest(messages, {}, combinedToken);
-        clearTimeout(timeoutId);
         logger.info('Réponse reçue de Copilot');
         return request;
     } catch (error) {
-        clearTimeout(timeoutId);
-        // Check user cancellation first
         if (cancellationToken?.isCancellationRequested) {
             throw new Error(MESSAGES.GENERATION_CANCELLED);
         }
-        // Then check for timeout
         if (tokenSource.token.isCancellationRequested) {
             throw new Error('Timeout calling Copilot');
         }
         throw error;
+    } finally {
+        clearTimeout(timeoutId); // Toujours nettoyer le timer
     }
 }
