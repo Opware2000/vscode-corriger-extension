@@ -51,8 +51,8 @@ development_status:
   1-3-identification-des-exercices-deja-corriges: in-progress
   epic-1-retrospective: optional
 
-  epic-2: backlog
-  2-1-generation-de-corrections-pedagogiques-completes: backlog
+  epic-2: in-progress
+  2-1-generation-de-corrections-pedagogiques-completes: ready-for-dev
   2-2-adaptation-au-niveau-lycee: backlog
   2-3-structuration-avec-format-latex-approprie: backlog
   2-4-respect-de-la-notation-mathematique-francaise: backlog
