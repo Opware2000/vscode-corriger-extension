@@ -50,6 +50,9 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showInformationMessage(MESSAGES.EXERCISE_SELECTED(selectedExercise.number));
 				console.log('Exercice sélectionné:', selectedExercise);
 			}
+		}).catch(error => {
+			console.error('Erreur lors de la sélection d\'exercice:', error);
+			vscode.window.showErrorMessage('Erreur lors de la sélection d\'exercice');
 		});
 	});
 

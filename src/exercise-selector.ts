@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 import { Exercise } from './latex-parser';
+import { detectExercises as detectExercisesFromContent } from './latex-parser';
 import { DECORATION_STYLES, MESSAGES } from './constants';
 
 /**
  * Interface for QuickPick items that include exercise data
  */
-interface ExerciseQuickPickItem extends vscode.QuickPickItem {
+export interface ExerciseQuickPickItem extends vscode.QuickPickItem {
     exercise: Exercise;
 }
 

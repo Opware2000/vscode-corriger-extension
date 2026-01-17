@@ -457,8 +457,8 @@ Contenu restant
 		test('[P1] should return selected exercise when user selects one', async () => {
 			// GIVEN: Mock exercises and QuickPick selection
 			const exercises: Exercise[] = [
-				{ number: 1, start: 0, end: 10, content: 'ex1', title: 'Ex1' },
-				{ number: 2, start: 11, end: 20, content: 'ex2', title: 'Ex2' }
+				{ number: 1, start: 0, end: 10, content: 'ex1', title: 'Ex1', status: 'pending' },
+				{ number: 2, start: 11, end: 20, content: 'ex2', title: 'Ex2', status: 'pending' }
 			];
 			const mockQuickPickItem = {
 				label: 'Exercice 1',
@@ -512,7 +512,7 @@ Contenu restant
 				setDecorations: sandbox.stub()
 			};
 			sandbox.stub(vscode.window, 'activeTextEditor').value(mockEditor);
-			const exercise: Exercise = { number: 1, start: 10, end: 20, content: 'test', title: 'Test' };
+			const exercise: Exercise = { number: 1, start: 10, end: 20, content: 'test', title: 'Test', status: 'pending' };
 
 			// WHEN: Highlighting exercise
 			highlightExercise(exercise);
@@ -524,7 +524,7 @@ Contenu restant
 		test('[P2] should do nothing when no active editor exists', () => {
 			// GIVEN: No active editor
 			sandbox.stub(vscode.window, 'activeTextEditor').value(undefined);
-			const exercise: Exercise = { number: 1, start: 10, end: 20, content: 'test', title: 'Test' };
+			const exercise: Exercise = { number: 1, start: 10, end: 20, content: 'test', title: 'Test', status: 'pending' };
 
 			// WHEN: Highlighting exercise
 			highlightExercise(exercise);
