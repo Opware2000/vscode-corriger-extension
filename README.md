@@ -96,9 +96,9 @@ L'extension propose plusieurs paramètres configurables :
 
 ### `vscode-corriger-extension.copilotModel`
 - **Type** : `string`
-- **Options** : `"gpt-5.2"`, `"gpt-5.1"`, `"gpt-5"`, `"gpt-4.1"`, `"gpt-4o"`, `"gpt-4-turbo"`, `"gpt-4"`, `"gpt-3.5-turbo"`
-- **Défaut** : `"gpt-5-mini"`
-- **Description** : Famille de modèle Copilot à privilégier pour la génération de corrections
+- **Options** : `"gpt-5.2"`, `"gpt-5.2-codex"`, `"gpt-5.1"`, `"gpt-5.1-codex"`, `"gpt-5.1-codex-mini"`, `"gpt-5.1-codex-max"`, `"gpt-5"`, `"gpt-5-mini"`, `"gpt-5-codex"`, `"gpt-4.1"`, `"gpt-4o"`, `"gpt-4-turbo"`, `"gpt-4"`, `"gpt-3.5-turbo"`, `"claude-haiku-4.5"`, `"claude-opus-4.1"`, `"claude-opus-4.5"`, `"claude-sonnet-4"`, `"claude-sonnet-4.5"`, `"gemini-3-flash"`, `"gemini-3-pro"`, `"grok-code-fast"`, `"raptor-mini"`
+- **Défaut** : `"gpt-5.2"`
+- **Description** : Modèle Copilot à utiliser pour la génération de corrections
 
 ### `vscode-corriger-extension.enableCache`
 - **Type** : `boolean`
