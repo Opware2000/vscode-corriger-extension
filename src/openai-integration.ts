@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import OpenAI from 'openai';
 import { MESSAGES } from './constants';
+import { logger } from './logger';
 
 // Cache for corrections
 interface CorrectionCacheEntry {
@@ -102,7 +103,7 @@ export async function generateCorrectionWithOpenAI(
     // Check cache first
     const cached = getCachedCorrection(exerciseContent);
     if (cached) {
-        console.log('Correction récupérée du cache');
+        logger.info('Correction récupérée du cache');
         return cached;
     }
 
@@ -125,7 +126,7 @@ Générez une correction pédagogique complète et détaillée en français, ada
 Répondez uniquement avec le contenu de la correction en LaTeX valide, sans balises \\begin{correction} ou \\end{correction}.`;
 
     try {
-        console.log(`Appel à OpenAI ${model} pour génération de correction`);
+        logger.info(`Appel à OpenAI ${model} pour génération de correction`);
 
         const response = await client.chat.completions.create({
             model: model,
@@ -148,13 +149,13 @@ Répondez uniquement avec le contenu de la correction en LaTeX valide, sans bali
 
         // Validate LaTeX syntax
         if (!validateLatexSyntax(correction)) {
-            console.warn('LaTeX généré peut contenir des erreurs de syntaxe');
+            logger.warn('LaTeX généré peut contenir des erreurs de syntaxe');
         }
 
         // Cache the correction
         cacheCorrection(exerciseContent, correction);
 
-        console.log('Correction générée avec succès via OpenAI');
+        logger.info('Correction générée avec succès via OpenAI');
         return correction;
 
     } catch (error: any) {
@@ -203,5 +204,5 @@ function validateLatexSyntax(correction: string): boolean {
  */
 export function clearCorrectionCache(): void {
     correctionCache.clear();
-    console.log('Cache des corrections vidé');
+    logger.info('Cache des corrections vidé');
 }

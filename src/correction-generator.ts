@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { generateCorrectionWithOpenAI } from './openai-integration';
 import { MESSAGES } from './constants';
+import { logger } from './logger';
 
 /**
  * Génère une correction pour un exercice en utilisant OpenAI
@@ -13,13 +14,13 @@ export async function generateCorrection(
     cancellationToken?: vscode.CancellationToken
 ): Promise<string> {
     try {
-        console.log('Début de génération de correction pour un exercice');
+        logger.info('Début de génération de correction pour un exercice');
         const correction = await generateCorrectionWithOpenAI(exerciseContent, cancellationToken);
-        console.log('Correction générée avec succès');
+        logger.info('Correction générée avec succès');
         return `\\begin{correction}\n${correction.trim()}\n\\end{correction}`;
     } catch (error) {
         const errorMessage = (error as Error).message;
-        console.error('Erreur lors de la génération de correction:', errorMessage);
+        logger.error('Erreur lors de la génération de correction', error as Error);
 
         // Re-throw with more user-friendly messages
         if (errorMessage.includes('Clé API OpenAI non configurée')) {

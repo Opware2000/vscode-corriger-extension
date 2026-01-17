@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { TIMEOUTS, LIMITS, MESSAGES } from './constants';
+import { logger } from './logger';
 
 // Rate limiting state
 let requestTimestamps: number[] = [];
@@ -72,10 +73,10 @@ export async function callCopilotWithTimeout(
 
     try {
         recordRequest();
-        console.log(`Appel à Copilot avec timeout de ${actualTimeout}ms`);
+        logger.info(`Appel à Copilot avec timeout de ${actualTimeout}ms`);
         const request = await model.sendRequest(messages, {}, combinedToken);
         clearTimeout(timeoutId);
-        console.log('Réponse reçue de Copilot');
+        logger.info('Réponse reçue de Copilot');
         return request;
     } catch (error) {
         clearTimeout(timeoutId);

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { createHash } from 'crypto';
+import { logger } from './logger';
 
 /**
  * Interface représentant un exercice détecté dans le document LaTeX
@@ -48,7 +49,7 @@ export function getPerformanceMetrics() {
  * @returns Un générateur d'objets Exercise
  */
 export function* generateExercises(content: string): Generator<Exercise, void, unknown> {
-    console.log('Génération des exercices avec yield');
+    logger.debug('Génération des exercices avec yield');
 
     // Use regex for efficient parsing
     const exerciseRegex = /\\begin{exercice}([\s\S]*?)\\end{exercice}/g;
@@ -106,7 +107,7 @@ export function detectExercises(content: string): Exercise[] {
         const cacheKey = createHash('md5').update(content).digest('hex');
         if (exerciseCache.has(cacheKey)) {
             cacheHits++;
-            console.log('Cache hit for exercise detection');
+            logger.debug('Cache hit for exercise detection');
             return exerciseCache.get(cacheKey)!;
         }
     }
@@ -158,7 +159,7 @@ export function detectExercises(content: string): Exercise[] {
     const endTime = performance.now();
     totalParseTime += (endTime - startTime);
 
-    console.log(`Détection d'exercices terminée: ${exercises.length} exercices trouvés en ${(endTime - startTime).toFixed(2)}ms`);
+    logger.info(`Détection d'exercices terminée: ${exercises.length} exercices trouvés en ${(endTime - startTime).toFixed(2)}ms`);
     return exercises;
 }
 
@@ -177,7 +178,7 @@ function getConfig<T>(key: string, defaultValue: T): T {
  * @returns Un objet ExerciseStructure avec les éléments extraits
  */
 export function parseExerciseStructure(exerciseContent: string): ExerciseStructure {
-    console.log('Analyse de la structure d\'un exercice');
+    logger.debug('Analyse de la structure d\'un exercice');
     const structure: ExerciseStructure = {};
 
     // Extraire l'énoncé
