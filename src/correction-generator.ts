@@ -59,10 +59,18 @@ Générez une correction pédagogique complète et détaillée en français, ada
   * ${FRENCH_MATH_VOCABULARY.BECAUSE} au lieu de "because"
 
 - Respecter les notations mathématiques françaises :
-  * Probabilités conditionnelles : ${FRENCH_MATH_NOTATIONS.PROBABILITY_CONDITIONAL}
-  * Espérance : ${FRENCH_MATH_NOTATIONS.EXPECTED_VALUE}
-  * Variance : ${FRENCH_MATH_NOTATIONS.VARIANCE}
-  * Écart-type : ${FRENCH_MATH_NOTATIONS.STANDARD_DEVIATION}
+   * Probabilités conditionnelles : utiliser ${FRENCH_MATH_NOTATIONS.PROBABILITY_CONDITIONAL} au lieu de P(B|A) (exemple : P_A(B) = 0,3)
+   * Espérance : ${FRENCH_MATH_NOTATIONS.EXPECTED_VALUE} (exemple : E[X] = 5)
+   * Variance : ${FRENCH_MATH_NOTATIONS.VARIANCE} (exemple : V(X) = 2,5)
+   * Écart-type : ${FRENCH_MATH_NOTATIONS.STANDARD_DEVIATION} (exemple : σ(X) = 1,58)
+   * Moyenne : ${FRENCH_MATH_NOTATIONS.MEAN} (exemple : $\\bar{x} = 4,2$)
+   * Médiane : ${FRENCH_MATH_NOTATIONS.MEDIAN} (exemple : Me = 3)
+   * Mode : ${FRENCH_MATH_NOTATIONS.MODE} (exemple : Mo = 2)
+   * Intervalles : ${FRENCH_MATH_NOTATIONS.INTERVAL_OPEN} pour ouvert, ${FRENCH_MATH_NOTATIONS.INTERVAL_CLOSED} pour fermé
+   * Ensembles : ${FRENCH_MATH_NOTATIONS.SET_NATURALS} naturels, ${FRENCH_MATH_NOTATIONS.SET_INTEGERS} entiers, ${FRENCH_MATH_NOTATIONS.SET_RATIONALS} rationnels, ${FRENCH_MATH_NOTATIONS.SET_REALS} réels
+   * Fonctions : ${FRENCH_MATH_NOTATIONS.FUNCTION_NOTATION} (exemple : f: x ↦ x²)
+   * Nombres décimaux : utiliser la virgule (3,14 au lieu de 3.14)
+   * Grands nombres : utiliser l'espace (1 000 000 au lieu de 1,000,000)
 
 - Expliquer chaque étape clairement et pédagogiquement
 - Utiliser un langage accessible aux élèves de lycée

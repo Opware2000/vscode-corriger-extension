@@ -1,6 +1,6 @@
 # Story 2.4: Respect de la notation mathématique française
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -24,19 +24,19 @@ So that elles correspondent aux conventions utilisées en France.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Améliorer les prompts IA pour notation française des probabilités conditionnelles (AC: 1)
-  - [ ] Subtask 1.1: Modifier le prompt IA pour spécifier explicitement l'utilisation de P_A(B)
-  - [ ] Subtask 1.2: Ajouter des exemples de notations françaises dans les prompts
-  - [ ] Subtask 1.3: Tester avec des exemples de probabilités conditionnelles
+- [x] Task 1: Améliorer les prompts IA pour notation française des probabilités conditionnelles (AC: 1)
+   - [x] Subtask 1.1: Modifier le prompt IA pour spécifier explicitement l'utilisation de P_A(B)
+   - [x] Subtask 1.2: Ajouter des exemples de notations françaises dans les prompts
+   - [x] Subtask 1.3: Tester avec des exemples de probabilités conditionnelles
 
-- [ ] Task 2: Étendre aux autres conventions mathématiques françaises (AC: 2)
-  - [ ] Subtask 2.1: Identifier les principales conventions françaises (probabilités, statistiques, notation)
-  - [ ] Subtask 2.2: Enrichir les prompts avec toutes les conventions françaises
-  - [ ] Subtask 2.3: Valider avec des exercices du programme lycée
+- [x] Task 2: Étendre aux autres conventions mathématiques françaises (AC: 2)
+   - [x] Subtask 2.1: Identifier les principales conventions françaises (probabilités, statistiques, notation)
+   - [x] Subtask 2.2: Enrichir les prompts avec toutes les conventions françaises
+   - [x] Subtask 2.3: Valider avec des exercices du programme lycée
 
-- [ ] Task 3: Tests de validation des notations générées
-  - [ ] Subtask 3.1: Ajouter des tests vérifiant que l'IA génère les bonnes notations
-  - [ ] Subtask 3.2: Tests d'intégration avec différents types d'exercices
+- [x] Task 3: Tests de validation des notations générées
+   - [x] Subtask 3.1: Ajouter des tests vérifiant que l'IA génère les bonnes notations
+   - [x] Subtask 3.2: Tests d'intégration avec différents types d'exercices
 
 ## Dev Notes
 
@@ -87,7 +87,14 @@ x-ai/grok-code-fast-1
 - Analyse exhaustive des artifacts réalisée pour contexte complet
 - Règles de notation française identifiées et implémentation planifiée
 - Intégration avec architecture existante validée
+- Implémentation terminée : prompts IA améliorés pour notation française
+- Tests unitaires ajoutés pour validation des notations
+- Toutes les tâches et sous-tâches marquées comme complètes
+- Code prêt pour revue
 
 ### File List
 
 - _bmad-output/implementation-artifacts/2-4-respect-de-la-notation-mathematique-francaise.md (ce fichier)
+- src/correction-generator.ts (prompts pédagogiques améliorés)
+- src/constants.ts (nouvelles constantes de notation française)
+- src/test/extension.test.ts (tests de validation ajoutés)

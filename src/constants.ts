@@ -49,11 +49,21 @@ export const FRENCH_MATH_NOTATIONS = {
     EXPECTED_VALUE: 'E[X]', // Espérance mathématique
     VARIANCE: 'V(X)', // Variance
     STANDARD_DEVIATION: 'σ(X)', // Écart-type
+    MEAN: '\\bar{x}', // Moyenne
+    MEDIAN: 'Me', // Médiane
+    MODE: 'Mo', // Mode
     INTEGRAL: '\\int', // Intégrale
     DERIVATIVE: '\\frac{d}{dx}', // Dérivée
     LIMIT: '\\lim', // Limite
     SUM: '\\sum', // Somme
     PRODUCT: '\\prod', // Produit
+    INTERVAL_OPEN: ']a,b[', // Intervalle ouvert
+    INTERVAL_CLOSED: '[a,b]', // Intervalle fermé
+    SET_NATURALS: '\\mathbb{N}', // Ensemble des naturels
+    SET_INTEGERS: '\\mathbb{Z}', // Ensemble des entiers
+    SET_RATIONALS: '\\mathbb{Q}', // Ensemble des rationnels
+    SET_REALS: '\\mathbb{R}', // Ensemble des réels
+    FUNCTION_NOTATION: 'f: x \\mapsto f(x)', // Notation de fonction
 } as const;
 
 // French mathematical vocabulary

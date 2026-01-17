@@ -733,6 +733,54 @@ Deuxième énoncé
 			assert.ok(prompt.includes(exerciseContent));
 		});
 
+		test('[P2] should explicitly specify French conditional probability notation P_A(B) instead of P(B|A)', () => {
+			// GIVEN: Mock empty configuration (uses default)
+			sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+				get: sandbox.stub().returns('')
+			} as any);
+
+			// Sample exercise content with conditional probability
+			const exerciseContent = '\\begin{exercice}\nCalculer P(A|B) pour deux événements A et B.\n\\end{exercice}';
+
+			// WHEN: Generating pedagogical prompt
+			const prompt = generatePedagogicalPrompt(exerciseContent);
+
+			// THEN: Prompt explicitly specifies using P_A(B) notation
+			assert.ok(prompt.includes('P_A(B)')); // Must use French notation
+			assert.ok(prompt.includes('au lieu de P(B|A)')); // Explicitly states to use instead of P(B|A)
+			assert.ok(prompt.includes('Probabilités conditionnelles')); // Mentions conditional probabilities
+		});
+
+		test('[P2] should include comprehensive French mathematical notations in prompts', () => {
+			// GIVEN: Mock empty configuration (uses default)
+			sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+				get: sandbox.stub().returns('')
+			} as any);
+
+			// Sample exercise content
+			const exerciseContent = '\\begin{exercice}\nRésoudre le problème statistique.\n\\end{exercice}';
+
+			// WHEN: Generating pedagogical prompt
+			const prompt = generatePedagogicalPrompt(exerciseContent);
+
+			// THEN: Prompt includes comprehensive French notations
+			assert.ok(prompt.includes('E[X]')); // Expected value
+			assert.ok(prompt.includes('V(X)')); // Variance
+			assert.ok(prompt.includes('σ(X)')); // Standard deviation
+			assert.ok(prompt.includes('\\bar{x}')); // Mean
+			assert.ok(prompt.includes('Me')); // Median
+			assert.ok(prompt.includes('Mo')); // Mode
+			assert.ok(prompt.includes(']a,b[')); // Open interval
+			assert.ok(prompt.includes('[a,b]')); // Closed interval
+			assert.ok(prompt.includes('\\mathbb{N}')); // Naturals
+			assert.ok(prompt.includes('\\mathbb{Z}')); // Integers
+			assert.ok(prompt.includes('\\mathbb{Q}')); // Rationals
+			assert.ok(prompt.includes('\\mathbb{R}')); // Reals
+			assert.ok(prompt.includes('f: x \\mapsto f(x)')); // Function notation
+			assert.ok(prompt.includes('virgule')); // Decimal comma
+			assert.ok(prompt.includes('espace')); // Number spacing
+		});
+
 		test('[P1] should use custom pedagogical prompt from configuration', () => {
 			// GIVEN: Mock custom configuration
 			const customPrompt = 'Custom prompt with {{exerciseContent}} placeholder';
