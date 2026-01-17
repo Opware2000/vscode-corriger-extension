@@ -1,1 +1,26 @@
-{"mcpServers":{"git":{"command":"uvx","args":["mcp-server-git","--repository","./"],"alwaysAllow":["git_log","git_status","git_add","git_commit"]}}}
+{
+  "mcpServers": {
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "./"
+      ],
+      "alwaysAllow": [
+        "git_log",
+        "git_status",
+        "git_add",
+        "git_commit"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "./"
+      ]
+    }
+  }
+}

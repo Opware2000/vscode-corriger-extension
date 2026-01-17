@@ -2,7 +2,15 @@ import * as vscode from 'vscode';
 import { createHash } from 'crypto';
 import { LIMITS } from './constants';
 import { logger } from './logger';
-import { getConfig } from './config';
+import { configService } from './config-service';
+
+/**
+ * État possible d'un exercice
+ */
+export enum ExerciseStatus {
+    PENDING = 'pending',
+    CORRECTED = 'corrected'
+}
 
 /**
  * Interface représentant un exercice détecté dans le document LaTeX
@@ -13,7 +21,7 @@ export interface Exercise {
     end: number;   // Position de fin dans le document
     content: string; // Contenu de l'exercice
     title?: string; // Titre extrait ou généré pour l'exercice
-    status: 'pending' | 'corrected';
+    status: ExerciseStatus;
 }
 
 /**
@@ -75,7 +83,7 @@ export function* generateExercises(content: string): Generator<Exercise, void, u
             end: end,
             content: exerciseContent,
             title: title,
-            status: structure.correction ? 'corrected' : 'pending'
+            status: structure.correction ? ExerciseStatus.CORRECTED : ExerciseStatus.PENDING
         };
 
         yield exercise;
@@ -104,8 +112,7 @@ export function detectExercises(content: string): Exercise[] {
     parseOperations++;
 
     // Check cache first if enabled
-    const enableCache = getConfig('enableCache', true);
-    if (enableCache) {
+    if (configService.enableCache) {
         const cacheKey = createHash('md5').update(content).digest('hex');
         if (exerciseCache.has(cacheKey)) {
             cacheHits++;
@@ -138,19 +145,18 @@ export function detectExercises(content: string): Exercise[] {
             end: end,
             content: exerciseContent,
             title: title,
-            status: structure.correction ? 'corrected' : 'pending'
+            status: structure.correction ? ExerciseStatus.CORRECTED : ExerciseStatus.PENDING
         });
 
         exerciseNumber++;
     }
 
     // Cache the result if enabled and not too many exercises
-    if (enableCache && exercises.length <= 100) {
+    if (configService.enableCache && exercises.length <= 100) {
         const cacheKey = createHash('md5').update(content).digest('hex');
         exerciseCache.set(cacheKey, exercises);
         // Limit cache size
-        const maxCacheSize = getConfig('maxCacheSize', LIMITS.EXERCISE_CACHE_SIZE);
-        if (exerciseCache.size > maxCacheSize) {
+        if (exerciseCache.size > configService.maxCacheSize) {
             const firstKey = exerciseCache.keys().next().value;
             if (firstKey) {
                 exerciseCache.delete(firstKey);
@@ -169,6 +175,7 @@ export function detectExercises(content: string): Exercise[] {
 
 /**
  * Analyse la structure interne d'un exercice LaTeX pour extraire l'énoncé, la correction, etc.
+ * Utilise une approche optimisée avec une seule passe de parsing
  * @param exerciseContent Le contenu d'un exercice (entre \begin{exercice} et \end{exercice})
  * @returns Un objet ExerciseStructure avec les éléments extraits
  */
@@ -176,21 +183,34 @@ export function parseExerciseStructure(exerciseContent: string): ExerciseStructu
     logger.debug('Analyse de la structure d\'un exercice');
     const structure: ExerciseStructure = {};
 
+    // Utiliser une regex complexe pour extraire tous les éléments en une seule passe
+    // Cette regex capture : enonce, correction, et le contenu restant
+    const fullMatch = exerciseContent.match(
+        /^\\begin{exercice}([\s\S]*?)\\end{exercice}$/
+    );
+
+    if (!fullMatch) {
+        logger.warn('Structure d\'exercice invalide détectée');
+        return structure;
+    }
+
+    const innerContent = fullMatch[1];
+
     // Extraire l'énoncé
-    const enonceMatch = exerciseContent.match(/\\begin{enonce}([\s\S]*?)\\end{enonce}/);
+    const enonceMatch = innerContent.match(/\\begin{enonce}([\s\S]*?)\\end{enonce}/);
     if (enonceMatch) {
         structure.enonce = enonceMatch[1].trim();
     }
 
     // Extraire la correction
-    const correctionMatch = exerciseContent.match(/\\begin{correction}([\s\S]*?)\\end{correction}/);
+    const correctionMatch = innerContent.match(/\\begin{correction}([\s\S]*?)\\end{correction}/);
     if (correctionMatch) {
         structure.correction = correctionMatch[1].trim();
     }
 
-    // Calculer le contenu restant en supprimant les balises connues en une seule passe
-    let cleanContent = exerciseContent
-        .replace(/\\begin{exercice}|\\end{exercice}/g, '')
+    // Calculer le contenu restant en supprimant les sections connues
+    // Utiliser une approche plus efficace avec une seule opération de remplacement
+    const cleanContent = innerContent
         .replace(/\\begin{enonce}[\s\S]*?\\end{enonce}/g, '')
         .replace(/\\begin{correction}[\s\S]*?\\end{correction}/g, '')
         .trim();

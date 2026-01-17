@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as sinon from 'sinon';
 import { getActiveDocumentContent } from '../document-access';
-import { detectExercises, parseExerciseStructure, Exercise } from '../latex-parser';
+import { detectExercises, parseExerciseStructure, Exercise, ExerciseStatus } from '../latex-parser';
 import { selectExercise, highlightExercise, clearExerciseHighlights } from '../exercise-selector';
 import { isCopilotAvailable, callCopilotWithTimeout } from '../copilot-integration';
 import { generateCorrection, generatePedagogicalPrompt } from '../correction-generator';
@@ -459,8 +459,8 @@ Contenu restant
 		test('[P1] should return selected exercise when user selects one', async () => {
 			// GIVEN: Mock exercises and QuickPick selection
 			const exercises: Exercise[] = [
-				{ number: 1, start: 0, end: 10, content: 'ex1', title: 'Ex1', status: 'pending' },
-				{ number: 2, start: 11, end: 20, content: 'ex2', title: 'Ex2', status: 'pending' }
+				{ number: 1, start: 0, end: 10, content: 'ex1', title: 'Ex1', status: ExerciseStatus.PENDING },
+				{ number: 2, start: 11, end: 20, content: 'ex2', title: 'Ex2', status: ExerciseStatus.PENDING }
 			];
 			const mockQuickPickItem = {
 				label: 'Exercice 1',
@@ -514,7 +514,7 @@ Contenu restant
 				setDecorations: sandbox.stub()
 			};
 			sandbox.stub(vscode.window, 'activeTextEditor').value(mockEditor);
-			const exercise: Exercise = { number: 1, start: 10, end: 20, content: 'test', title: 'Test', status: 'pending' };
+			const exercise: Exercise = { number: 1, start: 10, end: 20, content: 'test', title: 'Test', status: ExerciseStatus.PENDING };
 
 			// WHEN: Highlighting exercise
 			highlightExercise(exercise);
@@ -526,7 +526,7 @@ Contenu restant
 		test('[P2] should do nothing when no active editor exists', () => {
 			// GIVEN: No active editor
 			sandbox.stub(vscode.window, 'activeTextEditor').value(undefined);
-			const exercise: Exercise = { number: 1, start: 10, end: 20, content: 'test', title: 'Test', status: 'pending' };
+			const exercise: Exercise = { number: 1, start: 10, end: 20, content: 'test', title: 'Test', status: ExerciseStatus.PENDING };
 
 			// WHEN: Highlighting exercise
 			highlightExercise(exercise);

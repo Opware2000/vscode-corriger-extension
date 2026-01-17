@@ -79,3 +79,30 @@ export class ValidationError extends ExtensionError {
         this.name = 'ValidationError';
     }
 }
+
+/**
+ * Erreur wrapper qui préserve la cause originale pour faciliter le debugging
+ */
+export class WrappedError extends ExtensionError {
+    public readonly cause?: Error;
+
+    constructor(message: string, cause?: Error, code: string = 'WRAPPED_ERROR', isUserError: boolean = false) {
+        super(message, code, isUserError);
+        this.name = 'WrappedError';
+        this.cause = cause;
+
+        // Préserver la stack trace originale si disponible
+        if (cause && cause.stack) {
+            this.stack = `${this.stack}\nCaused by: ${cause.stack}`;
+        }
+    }
+
+    /**
+     * Crée une erreur wrappée à partir d'une erreur existante
+     */
+    static wrap(error: unknown, contextMessage: string, code?: string): WrappedError {
+        const originalError = error instanceof Error ? error : new Error(String(error));
+        const message = `${contextMessage}: ${originalError.message}`;
+        return new WrappedError(message, originalError, code || 'WRAPPED_ERROR');
+    }
+}
