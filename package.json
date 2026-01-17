@@ -24,7 +24,32 @@
         "command": "vscode-corriger-extension.generateCorrection",
         "title": "Générer une correction pour l'exercice sélectionné"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "VSCode Corriger Extension",
+      "properties": {
+        "vscode-corriger-extension.copilotTimeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "Timeout en millisecondes pour les appels à Copilot"
+        },
+        "vscode-corriger-extension.rateLimitRequests": {
+          "type": "number",
+          "default": 10,
+          "description": "Nombre maximum de requêtes Copilot par minute"
+        },
+        "vscode-corriger-extension.enableCache": {
+          "type": "boolean",
+          "default": true,
+          "description": "Activer le cache des exercices parsés"
+        },
+        "vscode-corriger-extension.maxCacheSize": {
+          "type": "number",
+          "default": 10,
+          "description": "Taille maximale du cache des exercices"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

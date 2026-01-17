@@ -91,24 +91,44 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		// Générer la correction
-		try {
-			vscode.window.showInformationMessage('Génération de la correction en cours...');
-			const correction = await generateCorrection(selectedExercise.content);
+		// Générer la correction avec progression et annulation
+		await vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: 'Génération de la correction',
+			cancellable: true
+		}, async (progress, token) => {
+			try {
+				progress.report({ increment: 0, message: 'Préparation...' });
 
-			// Insérer la correction dans le document
-			const editor = vscode.window.activeTextEditor;
-			if (editor) {
-				const position = editor.document.positionAt(selectedExercise.end);
-				await editor.edit(editBuilder => {
-					editBuilder.insert(position, '\n' + correction);
-				});
-				vscode.window.showInformationMessage('Correction générée et insérée avec succès.');
+				const correction = await generateCorrection(selectedExercise.content, token);
+
+				progress.report({ increment: 100, message: 'Insertion de la correction...' });
+
+				// Insérer la correction dans le document
+				const editor = vscode.window.activeTextEditor;
+				if (editor) {
+					const position = editor.document.positionAt(selectedExercise.end);
+					await editor.edit(editBuilder => {
+						editBuilder.insert(position, '\n' + correction);
+					});
+					vscode.window.showInformationMessage('Correction générée et insérée avec succès.');
+				}
+			} catch (error) {
+				const errorMessage = (error as Error).message;
+				console.error('Erreur lors de la génération de correction:', errorMessage);
+
+				// Afficher des messages d'erreur spécifiques
+				if (errorMessage.includes('Copilot not available')) {
+					vscode.window.showErrorMessage(MESSAGES.COPILOT_UNAVAILABLE);
+				} else if (errorMessage.includes('rate limit')) {
+					vscode.window.showErrorMessage(MESSAGES.RATE_LIMIT_EXCEEDED);
+				} else if (errorMessage.includes('cancelled')) {
+					vscode.window.showInformationMessage(MESSAGES.GENERATION_CANCELLED);
+				} else {
+					vscode.window.showErrorMessage(`Erreur lors de la génération de correction: ${errorMessage}`);
+				}
 			}
-		} catch (error) {
-			console.error('Erreur lors de la génération de correction:', error);
-			vscode.window.showErrorMessage(`Erreur lors de la génération de correction: ${(error as Error).message}`);
-		}
+		});
 	});
 
 	context.subscriptions.push(generateCorrectionDisposable);

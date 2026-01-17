@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 /**
  * Interface représentant un exercice détecté dans le document LaTeX
  */
@@ -19,6 +21,36 @@ export interface ExerciseStructure {
     otherContent?: string;
 }
 
+// Cache for parsed exercises
+const exerciseCache = new Map<string, Exercise[]>();
+
+// Performance metrics
+let parseOperations = 0;
+let cacheHits = 0;
+let totalParseTime = 0;
+
+/**
+ * Get performance metrics for exercise parsing
+ */
+export function getPerformanceMetrics() {
+    return {
+        totalOperations: parseOperations,
+        cacheHits,
+        cacheHitRate: parseOperations > 0 ? (cacheHits / parseOperations) * 100 : 0,
+        averageParseTime: parseOperations > 0 ? totalParseTime / parseOperations : 0
+    };
+}
+
+/**
+ * Reset performance metrics
+ */
+export function resetPerformanceMetrics() {
+    parseOperations = 0;
+    cacheHits = 0;
+    totalParseTime = 0;
+    exerciseCache.clear();
+}
+
 /**
  * Détecte les exercices dans le contenu LaTeX en utilisant les balises \begin{exercice} et \end{exercice}
  * Utilise un parser sécurisé pour éviter les vulnérabilités ReDoS
@@ -26,39 +58,37 @@ export interface ExerciseStructure {
  * @returns Un tableau d'objets Exercise représentant les exercices détectés
  */
 export function detectExercises(content: string): Exercise[] {
+    const startTime = performance.now();
+    parseOperations++;
+
+    // Check cache first if enabled
+    const enableCache = getConfig('enableCache', true);
+    if (enableCache) {
+        const cacheKey = `${content.length}-${content.slice(0, 100)}-${content.slice(-100)}`;
+        if (exerciseCache.has(cacheKey)) {
+            cacheHits++;
+            console.log('Cache hit for exercise detection');
+            return exerciseCache.get(cacheKey)!;
+        }
+    }
+
     const exercises: Exercise[] = [];
-    let index = 0;
 
-    while (index < content.length) {
-        // Trouver le début d'un exercice
-        const beginIndex = content.indexOf('\\begin{exercice}', index);
-        if (beginIndex === -1) {
-            break;
-        }
+    // Use regex for efficient parsing - matches nested structures
+    const exerciseRegex = /\\begin{exercice}([\s\S]*?)\\end{exercice}/g;
+    let match;
+    let exerciseNumber = 1;
 
-        // Trouver la fin correspondante en comptant les niveaux d'imbrication
-        let endIndex = findMatchingEndExercice(content, beginIndex);
-        if (endIndex === -1) {
-            // Si pas de fin trouvée, passer au suivant
-            index = beginIndex + 1;
-            continue;
-        }
+    while ((match = exerciseRegex.exec(content)) !== null) {
+        const exerciseContent = match[0];
+        const start = match.index;
+        const end = start + exerciseContent.length;
 
-        // Extraire le contenu de l'exercice (incluant les balises)
-        const exerciseContent = content.substring(beginIndex, endIndex + '\\end{exercice}'.length);
-        const exerciseNumber = exercises.length + 1;
+        // Parse structure for title and status
         const structure = parseExerciseStructure(exerciseContent);
-        const title = structure.enonce ? structure.enonce.substring(0, 50) + (structure.enonce.length > 50 ? '...' : '') : `Exercice ${exerciseNumber}`;
-
-        const start = beginIndex;
-        const end = endIndex + '\\end{exercice}'.length;
-
-        // Validation des positions
-        if (start < 0 || end <= start || end > content.length) {
-            console.log(`Positions invalides pour l'exercice ${exerciseNumber}: start=${start}, end=${end}`);
-            index = beginIndex + 1;
-            continue;
-        }
+        const title = structure.enonce ?
+            structure.enonce.substring(0, 50) + (structure.enonce.length > 50 ? '...' : '') :
+            `Exercice ${exerciseNumber}`;
 
         exercises.push({
             number: exerciseNumber,
@@ -69,46 +99,38 @@ export function detectExercises(content: string): Exercise[] {
             status: structure.correction ? 'corrected' : 'pending'
         });
 
-        // Continuer après cet exercice
-        index = endIndex + 1;
+        exerciseNumber++;
     }
 
+    // Cache the result if enabled and not too many exercises
+    if (enableCache && exercises.length <= 100) {
+        const cacheKey = `${content.length}-${content.slice(0, 100)}-${content.slice(-100)}`;
+        exerciseCache.set(cacheKey, exercises);
+        // Limit cache size
+        const maxCacheSize = getConfig('maxCacheSize', 10);
+        if (exerciseCache.size > maxCacheSize) {
+            const firstKey = exerciseCache.keys().next().value;
+            if (firstKey) {
+                exerciseCache.delete(firstKey);
+            }
+        }
+    }
+
+    const endTime = performance.now();
+    totalParseTime += (endTime - startTime);
+
+    console.log(`Détection d'exercices terminée: ${exercises.length} exercices trouvés en ${(endTime - startTime).toFixed(2)}ms`);
     return exercises;
 }
 
 /**
- * Trouve l'index de la balise \end{exercice} correspondante en comptant les niveaux d'imbrication
- * @param content Le contenu à analyser
- * @param beginIndex L'index du \begin{exercice}
- * @returns L'index du \end{exercice} correspondant, ou -1 si non trouvé
+ * Get configuration value with fallback to default
  */
-function findMatchingEndExercice(content: string, beginIndex: number): number {
-    let level = 0;
-    let i = beginIndex;
-
-    while (i < content.length) {
-        const beginPos = content.indexOf('\\begin{exercice}', i);
-        const endPos = content.indexOf('\\end{exercice}', i);
-
-        if (beginPos !== -1 && (endPos === -1 || beginPos < endPos)) {
-            // Trouvé un \begin{exercice} avant un \end{exercice}
-            level++;
-            i = beginPos + '\\begin{exercice}'.length;
-        } else if (endPos !== -1) {
-            // Trouvé un \end{exercice}
-            level--;
-            if (level === 0) {
-                return endPos;
-            }
-            i = endPos + '\\end{exercice}'.length;
-        } else {
-            // Plus de balises trouvées
-            break;
-        }
-    }
-
-    return -1; // Pas de fin correspondante trouvée
+function getConfig<T>(key: string, defaultValue: T): T {
+    const config = vscode.workspace.getConfiguration('vscode-corriger-extension');
+    return config.get(key, defaultValue);
 }
+
 
 /**
  * Analyse la structure interne d'un exercice LaTeX pour extraire l'énoncé, la correction, etc.
@@ -116,6 +138,7 @@ function findMatchingEndExercice(content: string, beginIndex: number): number {
  * @returns Un objet ExerciseStructure avec les éléments extraits
  */
 export function parseExerciseStructure(exerciseContent: string): ExerciseStructure {
+    console.log('Analyse de la structure d\'un exercice');
     const structure: ExerciseStructure = {};
 
     // Extraire l'énoncé

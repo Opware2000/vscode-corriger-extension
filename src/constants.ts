@@ -2,6 +2,19 @@
  * Constants for the vscode-corriger-extension
  */
 
+// Timeouts and limits
+export const TIMEOUTS = {
+    COPILOT_REQUEST: 30000, // 30 seconds for Copilot API calls
+    COPILOT_TEST: 1000, // 1 second for test timeouts
+    RATE_LIMIT_WINDOW: 60000, // 1 minute window for rate limiting
+} as const;
+
+export const LIMITS = {
+    MAX_REQUESTS_PER_WINDOW: 10, // Maximum Copilot requests per time window
+    MAX_DOCUMENT_SIZE: 10 * 1024 * 1024, // 10MB max document size
+    MAX_EXERCISES_CACHE: 100, // Maximum exercises to cache
+} as const;
+
 // User-facing messages
 export const MESSAGES = {
     NO_DOCUMENT: 'Aucun document ouvert ou document vide.',
@@ -9,7 +22,10 @@ export const MESSAGES = {
     EXERCISES_DETECTED: (count: number) => `${count} exercice(s) détecté(s) dans le document.`,
     EXERCISE_SELECTED: (number: number) => `Exercice ${number} sélectionné pour correction.`,
     SELECT_EXERCISE_PLACEHOLDER: 'Sélectionnez un exercice à corriger',
-    EXERCISE_DETAIL: (start: number, end: number) => `Positions ${start}-${end}`
+    EXERCISE_DETAIL: (start: number, end: number) => `Positions ${start}-${end}`,
+    COPILOT_UNAVAILABLE: 'Copilot n\'est pas disponible. Vérifiez que GitHub Copilot Chat est installé et activé.',
+    GENERATION_CANCELLED: 'Génération de correction annulée par l\'utilisateur.',
+    RATE_LIMIT_EXCEEDED: 'Trop de requêtes. Veuillez patienter avant de réessayer.',
 } as const;
 
 // Decoration styles
