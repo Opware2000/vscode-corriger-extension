@@ -1,6 +1,6 @@
 # VSCode Corriger Extension
 
-Extension VSCode pour la correction automatique d'exercices LaTeX utilisant l'IA Copilot.
+Extension VSCode pour la correction automatique d'exercices LaTeX utilisant l'IA OpenAI.
 
 ## Fonctionnalités
 
@@ -8,9 +8,11 @@ Cette extension permet de :
 
 - **Détecter automatiquement les exercices** dans les documents LaTeX utilisant les balises `\begin{exercice}` et `\end{exercice}`
 - **Sélectionner un exercice** à corriger via une interface interactive
-- **Générer des corrections pédagogiques** complètes et détaillées en français
+- **Générer des corrections pédagogiques** complètes et détaillées en français avec OpenAI GPT-4
+- **Prévisualiser les corrections** avant insertion avec option de régénération
 - **Insérer automatiquement** les corrections dans le document
 - **Mettre en surbrillance** les exercices détectés dans l'éditeur
+- **Cache intelligent** des corrections pour éviter les appels API répétés
 
 ### Commandes disponibles
 
@@ -20,13 +22,13 @@ Cette extension permet de :
 ## Prérequis
 
 - **VSCode** version 1.108.1 ou supérieure
-- **GitHub Copilot Chat** installé et activé dans VSCode
+- **Clé API OpenAI** valide (GPT-4 recommandé)
 - Documents en format LaTeX avec des exercices structurés
 
 ## Installation
 
 1. Installez l'extension depuis le marketplace VSCode
-2. Assurez-vous que GitHub Copilot Chat est installé et configuré
+2. Configurez votre clé API OpenAI dans les paramètres de l'extension
 3. Ouvrez un document LaTeX contenant des exercices
 
 ## Utilisation
@@ -50,22 +52,40 @@ La correction sera générée ici
 
 1. **Détection** : Utilisez `Ctrl+Shift+P` → "Détecter les exercices LaTeX"
 2. **Sélection** : Choisissez l'exercice à corriger dans la liste
-3. **Génération** : Lancez la génération de correction
-4. **Insertion** : La correction est automatiquement insérée dans le document
+3. **Génération** : Lancez la génération de correction avec `Ctrl+Shift+C` (Mac: `Cmd+Shift+C`)
+4. **Prévisualisation** : Consultez la correction générée dans l'onglet "Correction Preview"
+5. **Validation** : Choisissez d'insérer, régénérer ou annuler
+6. **Insertion** : La correction est automatiquement insérée dans le document
 
 ## Configuration
 
 L'extension propose plusieurs paramètres configurables :
 
-### `vscode-corriger-extension.copilotTimeout`
+### `vscode-corriger-extension.openaiApiKey`
+- **Type** : `string`
+- **Défaut** : `""`
+- **Description** : Clé API OpenAI pour la génération de corrections
+
+### `vscode-corriger-extension.openaiModel`
+- **Type** : `string`
+- **Options** : `"gpt-4"`, `"gpt-4-turbo"`, `"gpt-3.5-turbo"`
+- **Défaut** : `"gpt-4"`
+- **Description** : Modèle OpenAI à utiliser pour la génération de corrections
+
+### `vscode-corriger-extension.openaiTimeout`
 - **Type** : `number`
 - **Défaut** : `30000`
-- **Description** : Timeout en millisecondes pour les appels à Copilot
+- **Description** : Timeout en millisecondes pour les appels à OpenAI
 
-### `vscode-corriger-extension.rateLimitRequests`
+### `vscode-corriger-extension.enableCorrectionCache`
+- **Type** : `boolean`
+- **Défaut** : `true`
+- **Description** : Activer le cache des corrections générées
+
+### `vscode-corriger-extension.correctionCacheSize`
 - **Type** : `number`
-- **Défaut** : `10`
-- **Description** : Nombre maximum de requêtes Copilot par minute
+- **Défaut** : `50`
+- **Description** : Taille maximale du cache des corrections
 
 ### `vscode-corriger-extension.enableCache`
 - **Type** : `boolean`
@@ -84,18 +104,19 @@ L'extension propose plusieurs paramètres configurables :
 - **`extension.ts`** : Point d'entrée et gestion des commandes
 - **`latex-parser.ts`** : Parsing et détection des exercices LaTeX
 - **`exercise-selector.ts`** : Interface de sélection des exercices
-- **`correction-generator.ts`** : Génération des corrections via Copilot
-- **`copilot-integration.ts`** : Intégration avec l'API Copilot
+- **`correction-generator.ts`** : Génération des corrections via OpenAI
+- **`openai-integration.ts`** : Intégration avec l'API OpenAI et cache
 - **`document-access.ts`** : Accès au contenu des documents
 - **`constants.ts`** : Constantes et messages de l'application
 
 ### Fonctionnalités de performance
 
-- **Cache intelligent** des exercices parsés
-- **Rate limiting** pour éviter la surcharge des API
+- **Cache intelligent** des exercices parsés et des corrections générées
+- **Validation de syntaxe LaTeX** pour assurer la qualité des corrections
 - **Parsing optimisé** avec expressions régulières
 - **Métriques de performance** intégrées
 - **Annulation des opérations** longues
+- **Support multi-modèles** OpenAI (GPT-4, GPT-4 Turbo, GPT-3.5)
 
 ### Sécurité
 
@@ -133,9 +154,10 @@ npm run compile
 
 ## Problèmes connus
 
-- L'extension nécessite GitHub Copilot Chat pour fonctionner
+- L'extension nécessite une clé API OpenAI valide pour fonctionner
 - Les documents très volumineux peuvent nécessiter plus de temps de traitement
-- La génération de corrections peut être limitée par les quotas Copilot
+- La génération de corrections peut être limitée par les quotas OpenAI
+- Les coûts d'API OpenAI peuvent s'accumuler selon l'utilisation
 
 ## Support et contribution
 
