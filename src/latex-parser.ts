@@ -42,6 +42,44 @@ export function getPerformanceMetrics() {
 }
 
 /**
+ * Générateur qui yield les exercices un par un pour traiter de gros documents
+ * @param content Le contenu LaTeX du document
+ * @returns Un générateur d'objets Exercise
+ */
+export function* generateExercises(content: string): Generator<Exercise, void, unknown> {
+    console.log('Génération des exercices avec yield');
+
+    // Use regex for efficient parsing
+    const exerciseRegex = /\\begin{exercice}([\s\S]*?)\\end{exercice}/g;
+    let match;
+    let exerciseNumber = 1;
+
+    while ((match = exerciseRegex.exec(content)) !== null) {
+        const exerciseContent = match[0];
+        const start = match.index;
+        const end = start + exerciseContent.length;
+
+        // Parse structure for title and status
+        const structure = parseExerciseStructure(exerciseContent);
+        const title = structure.enonce ?
+            structure.enonce.substring(0, 50) + (structure.enonce.length > 50 ? '...' : '') :
+            `Exercice ${exerciseNumber}`;
+
+        const exercise: Exercise = {
+            number: exerciseNumber,
+            start: start,
+            end: end,
+            content: exerciseContent,
+            title: title,
+            status: structure.correction ? 'corrected' : 'pending'
+        };
+
+        yield exercise;
+        exerciseNumber++;
+    }
+}
+
+/**
  * Reset performance metrics
  */
 export function resetPerformanceMetrics() {
