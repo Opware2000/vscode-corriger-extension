@@ -96,4 +96,63 @@ suite('corriger command', () => {
         // THEN: Cancellation message should be shown
         assert.ok(showInfoStub.calledWith('Correction annulée par l\'utilisateur'), 'Message d\'annulation devrait être affiché');
     });
+
+    test('[P1] should register corrigerAtCursor command', async () => {
+        // GIVEN: Extension is activated
+        // WHEN: Checking if command is registered
+        const commands = await vscode.commands.getCommands(true);
+        const hasCorrigerAtCursorCommand = commands.includes('vscode-corriger-extension.corrigerAtCursor');
+
+        // THEN: Command should be registered
+        assert.ok(hasCorrigerAtCursorCommand, 'La commande corrigerAtCursor devrait être enregistrée');
+    });
+
+    test('[P1] should execute corrigerAtCursor command with cursor in exercise', async () => {
+        // GIVEN: Mock active editor with LaTeX content and cursor in exercise
+        const content = '\\begin{exercice}\nTest exercise\n\\end{exercice}';
+        const mockDocument = {
+            getText: sandbox.stub().returns(content),
+            positionAt: sandbox.stub().callsFake((offset: number) => ({ line: offset, character: 0 })),
+            offsetAt: sandbox.stub().callsFake((position: vscode.Position) => position.line)
+        };
+        const mockEditor = {
+            document: mockDocument,
+            selection: { active: { line: 1, character: 0 } }, // Cursor inside exercise
+            edit: sandbox.stub().resolves()
+        };
+        sandbox.stub(vscode.window, 'activeTextEditor').value(mockEditor);
+        sandbox.stub(vscode.window, 'showInformationMessage');
+
+        // WHEN: Executing corrigerAtCursor command
+        try {
+            await vscode.commands.executeCommand('vscode-corriger-extension.corrigerAtCursor');
+            // THEN: Command executes without throwing
+            assert.ok(true, 'La commande corrigerAtCursor devrait s\'exécuter sans erreur');
+        } catch (error) {
+            assert.fail(`La commande corrigerAtCursor a échoué: ${error}`);
+        }
+    });
+
+    test('[P1] should show error when cursor is not in exercise', async () => {
+        // GIVEN: Mock active editor with cursor outside exercise
+        const content = 'Some text\n\\begin{exercice}\nTest exercise\n\\end{exercice}';
+        const mockDocument = {
+            getText: sandbox.stub().returns(content),
+            positionAt: sandbox.stub().callsFake((offset: number) => ({ line: offset, character: 0 })),
+            offsetAt: sandbox.stub().callsFake((position: vscode.Position) => position.line)
+        };
+        const mockEditor = {
+            document: mockDocument,
+            selection: { active: { line: 0, character: 0 } }, // Cursor outside exercise
+            edit: sandbox.stub().resolves()
+        };
+        sandbox.stub(vscode.window, 'activeTextEditor').value(mockEditor);
+        const showInfoStub = sandbox.stub(vscode.window, 'showInformationMessage');
+
+        // WHEN: Executing corrigerAtCursor command
+        await vscode.commands.executeCommand('vscode-corriger-extension.corrigerAtCursor');
+
+        // THEN: Error message should be shown
+        assert.ok(showInfoStub.calledWith('Aucun exercice trouvé sous le curseur. Placez le curseur à l\'intérieur d\'un exercice.'), 'Message d\'erreur devrait être affiché');
+    });
 });

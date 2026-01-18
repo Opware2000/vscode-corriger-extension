@@ -12,7 +12,8 @@
   "activationEvents": [
     "onLanguage:latex",
     "onCommand:vscode-corriger-extension.detectExercises",
-    "onCommand:vscode-corriger-extension.corriger"
+    "onCommand:vscode-corriger-extension.corriger",
+    "onCommand:vscode-corriger-extension.corrigerAtCursor"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -28,6 +29,10 @@
       {
         "command": "vscode-corriger-extension.corriger",
         "title": "Corriger le document LaTeX"
+      },
+      {
+        "command": "vscode-corriger-extension.corrigerAtCursor",
+        "title": "Corriger l'exercice au niveau du curseur"
       }
     ],
     "keybindings": [

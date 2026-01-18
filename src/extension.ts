@@ -24,6 +24,24 @@ async function validateAndGetDocumentContent(): Promise<string | null> {
 }
 
 /**
+ * Trouve l'exercice contenant la position du curseur
+ * @param exercises Liste des exercices détectés
+ * @returns L'exercice contenant le curseur ou null si aucun
+ */
+function findExerciseAtCursor(exercises: Exercise[]): Exercise | null {
+	const activeEditor = vscode.window.activeTextEditor;
+	if (!activeEditor) {
+		return null;
+	}
+
+	const cursorPosition = activeEditor.selection.active;
+	const cursorOffset = activeEditor.document.offsetAt(cursorPosition);
+
+	// Trouver l'exercice contenant le curseur
+	return exercises.find(ex => ex.start <= cursorOffset && ex.end >= cursorOffset) || null;
+}
+
+/**
  * Détecte les exercices dans le contenu et valide qu'il y en a
  * @param content Le contenu LaTeX du document
  * @returns Tableau des exercices détectés
@@ -59,19 +77,23 @@ async function selectAndValidateExercise(exercises: Exercise[]): Promise<Exercis
 /**
  * Génère une correction pour un exercice avec gestion des tokens d'annulation
  * @param exerciseContent Contenu de l'exercice
+ * @param documentContent Contenu du document
  * @param token Token d'annulation
+ * @param extensionContext Contexte d'extension pour accéder aux ressources
  * @returns La correction générée
  */
-async function generateSingleCorrection(exerciseContent: string, documentContent: string, token: vscode.CancellationToken): Promise<string> {
-	return await generateCorrection(exerciseContent, documentContent, token);
+async function generateSingleCorrection(exerciseContent: string, documentContent: string, token: vscode.CancellationToken, extensionContext: vscode.ExtensionContext): Promise<string> {
+	return await generateCorrection(exerciseContent, documentContent, token, extensionContext);
 }
 
 /**
  * Gère le processus de prévisualisation et de régénération de correction
  * @param initialCorrection Correction initiale
  * @param exerciseContent Contenu de l'exercice pour régénération
+ * @param documentContent Contenu du document
  * @param progress Objet de progression
  * @param token Token d'annulation
+ * @param extensionContext Contexte d'extension pour accéder aux ressources
  * @returns La correction finale à insérer ou null si annulé
  */
 async function handleCorrectionPreviewAndRegeneration(
@@ -79,7 +101,8 @@ async function handleCorrectionPreviewAndRegeneration(
 	exerciseContent: string,
 	documentContent: string,
 	progress: vscode.Progress<{ increment: number; message: string }>,
-	token: vscode.CancellationToken
+	token: vscode.CancellationToken,
+	extensionContext: vscode.ExtensionContext
 ): Promise<string | null> {
 	let correction = initialCorrection;
 
@@ -96,7 +119,7 @@ async function handleCorrectionPreviewAndRegeneration(
 
 		if (previewResult === 'regenerate') {
 			progress.report({ increment: 50, message: 'Régénération...' });
-			correction = await generateSingleCorrection(exerciseContent, documentContent, token);
+			correction = await generateSingleCorrection(exerciseContent, documentContent, token, extensionContext);
 			progress.report({ increment: 100, message: 'Prévisualisation...' });
 			// Continue la boucle pour permettre plusieurs régénérations
 		}
@@ -109,9 +132,10 @@ async function handleCorrectionPreviewAndRegeneration(
  * @param documentContent Contenu du document
  * @param progress Objet de progression pour mettre à jour l'UI
  * @param token Token d'annulation
+ * @param extensionContext Contexte d'extension pour accéder aux ressources
  * @param preview Si true, affiche une prévisualisation avant insertion
  */
-async function generateAndInsertCorrection(exercise: Exercise, documentContent: string, progress: vscode.Progress<{ increment: number; message: string }>, token: vscode.CancellationToken, preview: boolean = true): Promise<void> {
+async function generateAndInsertCorrection(exercise: Exercise, documentContent: string, progress: vscode.Progress<{ increment: number; message: string }>, token: vscode.CancellationToken, extensionContext: vscode.ExtensionContext, preview: boolean = true): Promise<void> {
 	if (preview) {
 		// Mode avec prévisualisation (pour correction unique)
 		const initialCorrection = await vscode.window.withProgress({
@@ -120,7 +144,7 @@ async function generateAndInsertCorrection(exercise: Exercise, documentContent: 
 			cancellable: true
 		}, async (innerProgress, innerToken) => {
 			innerProgress.report({ increment: 0, message: 'Préparation...' });
-			const correction = await generateSingleCorrection(exercise.content, documentContent, innerToken);
+			const correction = await generateSingleCorrection(exercise.content, documentContent, innerToken, extensionContext);
 			innerProgress.report({ increment: 100, message: 'Prévisualisation...' });
 			return correction;
 		});
@@ -130,7 +154,8 @@ async function generateAndInsertCorrection(exercise: Exercise, documentContent: 
 			exercise.content,
 			documentContent,
 			progress,
-			token
+			token,
+			extensionContext
 		);
 
 		if (!finalCorrection) {
@@ -152,7 +177,7 @@ async function generateAndInsertCorrection(exercise: Exercise, documentContent: 
 		}
 	} else {
 		// Mode sans prévisualisation (pour correction globale)
-		const correction = await generateSingleCorrection(exercise.content, documentContent, token);
+		const correction = await generateSingleCorrection(exercise.content, documentContent, token, extensionContext);
 
 		const editor = vscode.window.activeTextEditor;
 		if (editor) {
@@ -338,7 +363,7 @@ async function handleDetectExercisesCommand(): Promise<void> {
 /**
  * Gère la commande de génération de correction
  */
-async function handleGenerateCorrectionCommand(): Promise<void> {
+async function handleGenerateCorrectionCommand(extensionContext: vscode.ExtensionContext): Promise<void> {
 	logger.info('Début de la commande generateCorrection');
 
 	// Valider et récupérer le contenu du document
@@ -368,7 +393,58 @@ async function handleGenerateCorrectionCommand(): Promise<void> {
 		cancellable: true
 	}, async (progress, token) => {
 		try {
-			await generateAndInsertCorrection(selectedExercise, content, progress, token, true);
+			await generateAndInsertCorrection(selectedExercise, content, progress, token, extensionContext, true);
+			logger.info('Correction générée et insérée avec succès');
+		} catch (error) {
+			handleCorrectionError(error);
+		}
+	});
+}
+
+/**
+ * Gère la commande de correction au niveau du curseur
+ */
+async function handleCorrigerAtCursorCommand(extensionContext: vscode.ExtensionContext): Promise<void> {
+	logger.info('Début de la commande corrigerAtCursor');
+
+	// Valider et récupérer le contenu du document
+	const content = await validateAndGetDocumentContent();
+	if (!content) {
+		return;
+	}
+
+	// Détecter les exercices
+	const exercises = detectExercises(content);
+	if (exercises.length === 0) {
+		vscode.window.showInformationMessage(MESSAGES.NO_EXERCISES_FOUND);
+		return;
+	}
+
+	// Trouver l'exercice au niveau du curseur
+	const cursorExercise = findExerciseAtCursor(exercises);
+	if (!cursorExercise) {
+		vscode.window.showInformationMessage('Aucun exercice trouvé sous le curseur. Placez le curseur à l\'intérieur d\'un exercice.');
+		return;
+	}
+
+	// Vérifier si l'exercice est déjà corrigé
+	const nextExerciseStart = exercises[exercises.indexOf(cursorExercise) + 1]?.start ?? content.length;
+	const correctionStart = content.indexOf('\\begin{correction}', cursorExercise.end);
+	if (correctionStart !== -1 && correctionStart < nextExerciseStart) {
+		vscode.window.showInformationMessage(`L'exercice ${cursorExercise.number} est déjà corrigé.`);
+		return;
+	}
+
+	logger.info(`Exercice au curseur: ${cursorExercise.number}`);
+
+	// Générer la correction avec progression et annulation
+	await vscode.window.withProgress({
+		location: vscode.ProgressLocation.Notification,
+		title: 'Génération de la correction',
+		cancellable: true
+	}, async (progress, token) => {
+		try {
+			await generateAndInsertCorrection(cursorExercise, content, progress, token, extensionContext, true);
 			logger.info('Correction générée et insérée avec succès');
 		} catch (error) {
 			handleCorrectionError(error);
@@ -379,7 +455,7 @@ async function handleGenerateCorrectionCommand(): Promise<void> {
 /**
  * Gère la commande de correction globale du document
  */
-async function handleCorrigerCommand(): Promise<void> {
+async function handleCorrigerCommand(extensionContext: vscode.ExtensionContext): Promise<void> {
 	logger.info('Début de la commande corriger');
 
 	// Valider et récupérer le contenu du document
@@ -434,7 +510,7 @@ async function handleCorrigerCommand(): Promise<void> {
 			}
 
 			try {
-				await generateAndInsertCorrection(exercise, content, progress, token, false);
+				await generateAndInsertCorrection(exercise, content, progress, token, extensionContext, false);
 				completed++;
 			} catch (error) {
 				logger.error(`Erreur lors de la correction de l'exercice ${exercise.number}`, error as Error);
@@ -472,16 +548,23 @@ function registerCommands(context: vscode.ExtensionContext): void {
 	// Commande de génération de correction
 	const generateCorrectionDisposable = vscode.commands.registerCommand(
 		'vscode-corriger-extension.generateCorrection',
-		handleGenerateCorrectionCommand
+		() => handleGenerateCorrectionCommand(context)
 	);
 	context.subscriptions.push(generateCorrectionDisposable);
 
 	// Commande de correction globale
 	const corrigerDisposable = vscode.commands.registerCommand(
 		'vscode-corriger-extension.corriger',
-		handleCorrigerCommand
+		() => handleCorrigerCommand(context)
 	);
 	context.subscriptions.push(corrigerDisposable);
+
+	// Commande de correction au niveau du curseur
+	const corrigerAtCursorDisposable = vscode.commands.registerCommand(
+		'vscode-corriger-extension.corrigerAtCursor',
+		() => handleCorrigerAtCursorCommand(context)
+	);
+	context.subscriptions.push(corrigerAtCursorDisposable);
 }
 
 /**

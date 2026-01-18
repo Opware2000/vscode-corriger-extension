@@ -1,6 +1,6 @@
 # Story 1.0: configuration-initiale-du-projet-avec-starter-template-vs-code
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
