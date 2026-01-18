@@ -218,15 +218,15 @@ So that elles s'intègrent parfaitement dans le document.
 ### Story 2.4: Respect de la notation mathématique française
 
 As an enseignant de maths,
-I want que les corrections respectent la notation mathématique française,
-So that elles correspondent aux conventions utilisées en France.
+I want que les prompts IA incluent les instructions pour respecter la notation mathématique française,
+So that l'IA génère des corrections conformes aux conventions françaises.
 
 **Acceptance Criteria:**
 
 **Given** un exercice nécessitant des probabilités conditionnelles
-**When** l'extension génère la correction
-**Then** elle utilise P_A(B) au lieu de P(B|A)
-**And** elle respecte toutes les conventions françaises de notation
+**When** l'extension génère le prompt IA
+**Then** le prompt spécifie d'utiliser P_A(B) au lieu de P(B|A)
+**And** le prompt inclut toutes les conventions françaises de notation
 
 ## Epic 3: Vérification Mathématique Automatique
 
