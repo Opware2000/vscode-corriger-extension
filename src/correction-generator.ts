@@ -19,9 +19,8 @@ import { getConfig } from './config';
  * // Retourne un prompt détaillé avec vocabulaire mathématique français
  * ```
  */
-export function generatePedagogicalPrompt(exerciseContent: string, documentStructure?: import('./latex-parser').DocumentStructure): string {
-    const config = vscode.workspace.getConfiguration('vscode-corriger-extension');
-    const template = config.get('pedagogicalPrompt', '') as string;
+export function generatePedagogicalPrompt(exerciseContent: string, documentStructure?: import('./latex-parser').DocumentStructure, extensionContext?: vscode.ExtensionContext): string {
+    const template = getConfig('pedagogicalPrompt', '') as string;
 
     let prompt: string;
 
@@ -42,12 +41,14 @@ export function generatePedagogicalPrompt(exerciseContent: string, documentStruc
     }
 
     // Append verification instructions
-    const verificationPath = path.join(__dirname, 'prompts', 'verification-instructions.md');
-    try {
-        const verificationInstructions = fs.readFileSync(verificationPath, 'utf8');
-        prompt += '\n\n' + verificationInstructions;
-    } catch (error) {
-        logger.warn('Could not load verification instructions', error as Error);
+    if (extensionContext) {
+        try {
+            const verificationUri = vscode.Uri.joinPath(extensionContext.extensionUri, 'src', 'prompts', 'verification-instructions.md');
+            const verificationInstructions = fs.readFileSync(verificationUri.fsPath, 'utf8');
+            prompt += '\n\n' + verificationInstructions;
+        } catch (error) {
+            logger.warn('Could not load verification instructions', error as Error);
+        }
     }
 
     return prompt;
@@ -87,7 +88,8 @@ function generateDocumentContext(documentStructure: import('./latex-parser').Doc
 export async function generateCorrection(
     exerciseContent: string,
     documentContent?: string,
-    cancellationToken?: vscode.CancellationToken
+    cancellationToken?: vscode.CancellationToken,
+    extensionContext?: vscode.ExtensionContext
 ): Promise<string> {
     try {
         logger.info('Début de génération de correction pour un exercice');
@@ -108,7 +110,7 @@ export async function generateCorrection(
                 throw new Error(MESSAGES.COPILOT_UNAVAILABLE);
             }
 
-            const prompt = generatePedagogicalPrompt(exerciseContent, documentStructure);
+            const prompt = generatePedagogicalPrompt(exerciseContent, documentStructure, extensionContext);
 
             const messages = [vscode.LanguageModelChatMessage.User(prompt)];
             const timeout = getConfig('copilotTimeout', 30000);
