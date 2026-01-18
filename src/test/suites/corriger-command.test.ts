@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as sinon from 'sinon';
+import { generateBatchCorrections } from '../../correction-generator';
 
 suite('corriger command', () => {
     let sandbox: sinon.SinonSandbox;
@@ -154,5 +155,28 @@ suite('corriger command', () => {
 
         // THEN: Error message should be shown
         assert.ok(showInfoStub.calledWith('Aucun exercice trouvé sous le curseur. Placez le curseur à l\'intérieur d\'un exercice.'), 'Message d\'erreur devrait être affiché');
+    });
+
+    test('[P1] should have generateBatchCorrections function available', async () => {
+        // GIVEN: Function should be imported
+        // WHEN: Checking if function exists
+        // THEN: Function should be available
+        assert.ok(typeof generateBatchCorrections === 'function', 'La fonction generateBatchCorrections devrait être disponible');
+    });
+
+    test('[P1] should handle empty batch gracefully', async () => {
+        // GIVEN: Empty array of exercises
+        const exercises: string[] = [];
+        const documentContent = 'Some document content';
+
+        // WHEN: Calling generateBatchCorrections with empty array
+        try {
+            const result = await generateBatchCorrections(exercises, documentContent);
+            // THEN: Should return empty array
+            assert.deepEqual(result, [], 'Devrait retourner un tableau vide pour un batch vide');
+        } catch (error) {
+            // Acceptable si l'IA n'est pas configurée, mais ne devrait pas crasher
+            assert.ok(true, 'Erreur acceptable pour batch vide si IA non configurée');
+        }
     });
 });

@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { getActiveDocumentContent } from './document-access';
 import { detectExercises } from './latex-parser';
 import { selectExercise, clearExerciseHighlights } from './exercise-selector';
-import { generateCorrection } from './correction-generator';
+import { generateCorrection, generateBatchCorrections } from './correction-generator';
 import { MESSAGES } from './constants';
 import { logger } from './logger';
 import { ExtensionError, CopilotError, RateLimitError, CancellationError, OpenAIError, WrappedError } from './errors';
@@ -483,46 +483,91 @@ async function handleCorrigerCommand(extensionContext: vscode.ExtensionContext):
 		let processed = 0;
 		const total = exercises.length;
 
+		// Collecter les exercices non corrigés pour traitement en batch
+		const exercisesToCorrect: Exercise[] = [];
 		for (let i = 0; i < exercises.length; i++) {
 			const exercise = exercises[i];
-
-			if (token.isCancellationRequested) {
-				vscode.window.showInformationMessage('Correction annulée par l\'utilisateur');
-				break;
-			}
-
-			progress.report({
-				increment: 0,
-				message: `Correction de l'exercice ${exercise.number}...`
-			});
-
-			// Vérifier si l'exercice est déjà corrigé
 			const nextExerciseStart = exercises[i + 1]?.start ?? content.length;
 			const correctionStart = content.indexOf('\\begin{correction}', exercise.end);
-			if (correctionStart !== -1 && correctionStart < nextExerciseStart) {
+			if (correctionStart === -1 || correctionStart >= nextExerciseStart) {
+				exercisesToCorrect.push(exercise);
+			} else {
 				logger.info(`Exercice ${exercise.number} déjà corrigé, ignoré`);
-				processed++;
-				progress.report({
-					increment: (1 / total) * 100,
-					message: processed === total ? 'Terminé' : `Correction de l'exercice ${exercises[i + 1]?.number || 'suivant'}...`
-				});
-				continue;
+			}
+		}
+
+		if (exercisesToCorrect.length > 0) {
+			// Vérifier la cancellation avant de commencer la génération
+			if (token.isCancellationRequested) {
+				vscode.window.showInformationMessage('Correction annulée par l\'utilisateur');
+				return;
 			}
 
 			try {
-				await generateAndInsertCorrection(exercise, content, progress, token, extensionContext, false);
-				completed++;
-			} catch (error) {
-				logger.error(`Erreur lors de la correction de l'exercice ${exercise.number}`, error as Error);
-				handleCorrectionError(error);
-				// Continue avec les autres exercices même en cas d'erreur
-			}
+				progress.report({
+					increment: 0,
+					message: `Génération des corrections pour ${exercisesToCorrect.length} exercices...`
+				});
 
-			processed++;
-			progress.report({
-				increment: (1 / total) * 100,
-				message: processed === total ? 'Terminé' : `Correction de l'exercice ${exercises[i + 1]?.number || 'suivant'}...`
-			});
+				// Générer toutes les corrections en batch
+				const exerciseContents = exercisesToCorrect.map(ex => ex.content);
+				const corrections = await generateBatchCorrections(exerciseContents, content, token, extensionContext);
+
+				progress.report({
+					increment: 50,
+					message: 'Insertion des corrections...'
+				});
+
+				// Insérer chaque correction
+				for (let j = 0; j < exercisesToCorrect.length; j++) {
+					const exercise = exercisesToCorrect[j];
+					const correction = corrections[j];
+
+					if (token.isCancellationRequested) {
+						vscode.window.showInformationMessage('Correction annulée par l\'utilisateur');
+						break;
+					}
+
+					const editor = vscode.window.activeTextEditor;
+					if (editor) {
+						const endTagIndex = exercise.content.lastIndexOf('\\end{exercice}');
+						const insertPosition = endTagIndex !== -1 ?
+							editor.document.positionAt(exercise.start + endTagIndex) :
+							editor.document.positionAt(exercise.end);
+
+						await editor.edit(editBuilder => {
+							editBuilder.insert(insertPosition, '\n' + correction);
+						});
+						completed++;
+					}
+
+					processed++;
+					progress.report({
+						increment: (1 / total) * 100,
+						message: processed === total ? 'Terminé' : `Insertion de la correction ${j + 1}/${exercisesToCorrect.length}...`
+					});
+				}
+			} catch (error) {
+				logger.error('Erreur lors de la génération batch de corrections', error as Error);
+				handleCorrectionError(error);
+				// En cas d'erreur batch, essayer de générer individuellement
+				for (const exercise of exercisesToCorrect) {
+					if (token.isCancellationRequested) break;
+					try {
+						await generateAndInsertCorrection(exercise, content, progress, token, extensionContext, false);
+						completed++;
+					} catch (individualError) {
+						logger.error(`Erreur lors de la correction individuelle de l'exercice ${exercise.number}`, individualError as Error);
+					}
+					processed++;
+					progress.report({
+						increment: (1 / total) * 100,
+						message: processed === total ? 'Terminé' : `Correction individuelle de l'exercice ${exercise.number}...`
+					});
+				}
+			}
+		} else {
+			processed = total; // Tous les exercices étaient déjà corrigés
 		}
 
 		if (completed > 0 || processed > 0) {
