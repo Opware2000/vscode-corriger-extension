@@ -10,9 +10,6 @@ import { logger } from './logger';
 import { ExtensionError, CopilotError, RateLimitError, CancellationError, OpenAIError, WrappedError } from './errors';
 import { Exercise } from './latex-parser';
 
-// Contexte d'extension global pour accéder aux ressources
-let extensionContext: vscode.ExtensionContext;
-
 /**
  * Valide le document actif et retourne son contenu
  * @returns Le contenu du document ou null si invalide
@@ -239,8 +236,8 @@ async function handleChatParticipantRequest(
 		// Vérifier s'il y a une sélection active
 		const activeEditor = vscode.window.activeTextEditor;
 		if (activeEditor && !activeEditor.selection.isEmpty) {
-			// Utiliser la sélection
-			const selectedText = activeEditor.document.getText(activeEditor.selection);
+			// Utiliser la sélection (selectedText pourrait être utilisé pour analyse future)
+			// const selectedText = activeEditor.document.getText(activeEditor.selection);
 			// Trouver l'exercice contenant la sélection
 			targetExercise = exercises.find(ex =>
 				ex.start <= activeEditor.document.offsetAt(activeEditor.selection.start) &&
@@ -506,9 +503,6 @@ function registerChatParticipant(context: vscode.ExtensionContext): void {
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	// Stocker le contexte globalement pour accéder aux ressources
-	extensionContext = context;
-
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	logger.info('Félicitations, votre extension "vscode-corriger-extension" est maintenant active !');

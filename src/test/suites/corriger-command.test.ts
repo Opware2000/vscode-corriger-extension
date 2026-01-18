@@ -5,11 +5,11 @@ import * as sinon from 'sinon';
 suite('corriger command', () => {
     let sandbox: sinon.SinonSandbox;
 
-    suiteSetup(() => {
+    setup(() => {
         sandbox = sinon.createSandbox();
     });
 
-    suiteTeardown(() => {
+    teardown(() => {
         sandbox.restore();
     });
 
@@ -82,7 +82,7 @@ suite('corriger command', () => {
         const showInfoStub = sandbox.stub(vscode.window, 'showInformationMessage');
 
         // Mock withProgress to simulate cancellation
-        sandbox.stub(vscode.window, 'withProgress').callsFake(async (options, callback) => {
+        sandbox.stub(vscode.window, 'withProgress').callsFake(async (_options, callback) => {
             const token = {
                 isCancellationRequested: true,
                 onCancellationRequested: sandbox.stub()

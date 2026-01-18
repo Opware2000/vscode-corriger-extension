@@ -6,11 +6,11 @@ import { isCopilotAvailable, callCopilotWithTimeout } from '../../copilot-integr
 suite('Copilot Integration', () => {
     let sandbox: sinon.SinonSandbox;
 
-    suiteSetup(() => {
+    setup(() => {
         sandbox = sinon.createSandbox();
     });
 
-    suiteTeardown(() => {
+    teardown(() => {
         sandbox.restore();
     });
 

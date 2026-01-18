@@ -6,11 +6,11 @@ import { generateCorrection, generatePedagogicalPrompt } from '../../correction-
 suite('Correction Generator', () => {
     let sandbox: sinon.SinonSandbox;
 
-    suiteSetup(() => {
+    setup(() => {
         sandbox = sinon.createSandbox();
     });
 
-    suiteTeardown(() => {
+    teardown(() => {
         sandbox.restore();
     });
 

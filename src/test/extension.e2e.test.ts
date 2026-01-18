@@ -14,19 +14,22 @@ const createLatexDocumentWithExercises = (count: number, overrides: string[] = [
 };
 
 suite('Extension E2E Tests', () => {
-    let sandbox: sinon.SinonSandbox;
-
     suiteSetup(async () => {
         // Wait for extension to be activated
         await vscode.extensions.getExtension('vscode-corriger-extension')?.activate();
-        sandbox = sinon.createSandbox();
-    });
-
-    suiteTeardown(() => {
-        sandbox.restore();
     });
 
     suite('Command Execution', () => {
+        let sandbox: sinon.SinonSandbox;
+
+        setup(() => {
+            sandbox = sinon.createSandbox();
+        });
+
+        teardown(() => {
+            sandbox.restore();
+        });
+
         test('[P0] should execute detectExercises command with valid LaTeX document', async () => {
             // GIVEN: Create a new document with LaTeX exercises
             const document = await vscode.workspace.openTextDocument({
@@ -37,7 +40,7 @@ suite('Extension E2E Tests', () => {
 
             // Mock the information message to capture it
             let messageShown = '';
-            const showInfoStub = sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
+            sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
                 messageShown = message;
                 return Promise.resolve(undefined as any);
             });
@@ -47,7 +50,6 @@ suite('Extension E2E Tests', () => {
 
             // THEN: Information message shows correct exercise count
             assert.strictEqual(messageShown, MESSAGES.EXERCISES_DETECTED(2));
-            showInfoStub.restore();
         });
 
         test('[P0] should execute detectExercises command with no exercises', async () => {
@@ -60,7 +62,7 @@ suite('Extension E2E Tests', () => {
 
             // Mock the information message
             let messageShown = '';
-            const showInfoStub = sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
+            sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
                 messageShown = message;
                 return Promise.resolve(undefined as any);
             });
@@ -70,7 +72,6 @@ suite('Extension E2E Tests', () => {
 
             // THEN: Shows no exercises message
             assert.strictEqual(messageShown, 'Aucun exercice détecté dans le document.');
-            showInfoStub.restore();
         });
 
         test('[P1] should handle empty document gracefully', async () => {
@@ -83,7 +84,7 @@ suite('Extension E2E Tests', () => {
 
             // Mock the information message
             let messageShown = '';
-            const showInfoStub = sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
+            sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
                 messageShown = message;
                 return Promise.resolve(undefined as any);
             });
@@ -93,7 +94,6 @@ suite('Extension E2E Tests', () => {
 
             // THEN: Shows no document message
             assert.strictEqual(messageShown, 'Aucun document ouvert ou document vide.');
-            showInfoStub.restore();
         });
 
         test('[P1] should handle complex LaTeX structure with nested exercises', async () => {
@@ -126,7 +126,7 @@ Calculer $2 + 2$.
 
             // Mock the information message
             let messageShown = '';
-            const showInfoStub = sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
+            sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
                 messageShown = message;
                 return Promise.resolve(undefined as any);
             });
@@ -136,7 +136,6 @@ Calculer $2 + 2$.
 
             // THEN: Detects both exercises
             assert.strictEqual(messageShown, MESSAGES.EXERCISES_DETECTED(2));
-            showInfoStub.restore();
         });
 
         test('[P2] should handle large documents with many exercises', async () => {
@@ -150,7 +149,7 @@ Calculer $2 + 2$.
 
             // Mock the information message
             let messageShown = '';
-            const showInfoStub = sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
+            sandbox.stub(vscode.window, 'showInformationMessage').callsFake((message: string) => {
                 messageShown = message;
                 return Promise.resolve(undefined as any);
             });
@@ -160,7 +159,6 @@ Calculer $2 + 2$.
 
             // THEN: Correctly counts all exercises
             assert.strictEqual(messageShown, MESSAGES.EXERCISES_DETECTED(50));
-            showInfoStub.restore();
         });
     });
 

@@ -1,6 +1,6 @@
 # Story 1.2: selection-d-un-exercice-specifique
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -101,3 +101,4 @@ Tests unitaires ajoutés pour toutes les fonctionnalités
 - Intégration dans workflow de correction (Date: 2026-01-16)
 - Gestion erreurs et cas limites (Date: 2026-01-16)
 - Tests unitaires complets (Date: 2026-01-16)
+- Corrections appliquées depuis la revue de code : validation d'entrée ajoutée dans selectExercise, limite d'extraction de titre augmentée à 100 caractères, test ajouté pour annulation utilisateur, variable inutilisée corrigée dans test (Date: 2026-01-18)

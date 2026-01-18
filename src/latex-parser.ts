@@ -93,7 +93,7 @@ export function* generateExercises(content: string): Generator<Exercise, void, u
         // Parse structure for title and status
         const structure = parseExerciseStructure(exerciseContent);
         const title = structure.enonce ?
-            structure.enonce.substring(0, 50) + (structure.enonce.length > 50 ? '...' : '') :
+            structure.enonce.substring(0, 100) + (structure.enonce.length > 100 ? '...' : '') :
             `Exercice ${exerciseNumber}`;
 
         const exercise: Exercise = {
@@ -121,6 +121,26 @@ export function resetPerformanceMetrics() {
 }
 
 /**
+ * Invalidate cache entries for a specific document content
+ * Useful when document content changes
+ */
+export function invalidateCache(content: string) {
+    if (configService.enableCache) {
+        const cacheKey = createHash('md5').update(content).digest('hex');
+        exerciseCache.delete(cacheKey);
+        logger.debug('Cache invalidated for document');
+    }
+}
+
+/**
+ * Clear all cache entries
+ */
+export function clearCache() {
+    exerciseCache.clear();
+    logger.debug('All cache entries cleared');
+}
+
+/**
  * Détecte les exercices dans le contenu LaTeX en utilisant les balises \begin{exercice} et \end{exercice}
  * Utilise un parser sécurisé pour éviter les vulnérabilités ReDoS
  * @param content Le contenu LaTeX du document
@@ -142,32 +162,9 @@ export function detectExercises(content: string): Exercise[] {
 
     const exercises: Exercise[] = [];
 
-    // Use regex for efficient parsing - matches nested structures
-    const exerciseRegex = /\\begin{exercice}([\s\S]*?)\\end{exercice}/g;
-    let match;
-    let exerciseNumber = 1;
-
-    while ((match = exerciseRegex.exec(content)) !== null) {
-        const exerciseContent = match[0];
-        const start = match.index;
-        const end = start + exerciseContent.length;
-
-        // Parse structure for title and status
-        const structure = parseExerciseStructure(exerciseContent);
-        const title = structure.enonce ?
-            structure.enonce.substring(0, 50) + (structure.enonce.length > 50 ? '...' : '') :
-            `Exercice ${exerciseNumber}`;
-
-        exercises.push({
-            number: exerciseNumber,
-            start: start,
-            end: end,
-            content: exerciseContent,
-            title: title,
-            status: structure.correction ? ExerciseStatus.IGNORED : ExerciseStatus.PENDING
-        });
-
-        exerciseNumber++;
+    // Use the generator for consistent parsing logic
+    for (const exercise of generateExercises(content)) {
+        exercises.push(exercise);
     }
 
     // Cache the result if enabled and not too many exercises

@@ -52,6 +52,11 @@ export function clearExerciseHighlights(): void {
  * @returns L'exercice sélectionné ou undefined si annulé
  */
 export async function selectExercise(exercises: Exercise[]): Promise<Exercise | undefined> {
+    if (!exercises) {
+        vscode.window.showErrorMessage('Liste d\'exercices invalide');
+        return undefined;
+    }
+
     // Filtrer les exercices déjà corrigés (ne montrer que les PENDING)
     const pendingExercises = exercises.filter(exercise => exercise.status === ExerciseStatus.PENDING);
 

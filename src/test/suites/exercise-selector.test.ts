@@ -7,11 +7,11 @@ import { Exercise, ExerciseStatus } from '../../latex-parser';
 suite('selectExercise', () => {
     let sandbox: sinon.SinonSandbox;
 
-    suiteSetup(() => {
+    setup(() => {
         sandbox = sinon.createSandbox();
     });
 
-    suiteTeardown(() => {
+    teardown(() => {
         sandbox.restore();
     });
 
@@ -50,16 +50,27 @@ suite('selectExercise', () => {
         assert.ok(showInfoStub.calledOnce);
         assert.strictEqual(selected, undefined);
     });
+
+    test('[P1] should return undefined when user cancels selection', async () => {
+        // GIVEN: Mock QuickPick to return undefined (user cancels)
+        sandbox.stub(vscode.window, 'showQuickPick').resolves(undefined);
+
+        // WHEN: Selecting exercise
+        const selected = await selectExercise([{ number: 1, start: 0, end: 10, content: 'ex1', title: 'Ex1', status: ExerciseStatus.PENDING }]);
+
+        // THEN: Returns undefined
+        assert.strictEqual(selected, undefined);
+    });
 });
 
 suite('highlightExercise', () => {
     let sandbox: sinon.SinonSandbox;
 
-    suiteSetup(() => {
+    setup(() => {
         sandbox = sinon.createSandbox();
     });
 
-    suiteTeardown(() => {
+    teardown(() => {
         sandbox.restore();
     });
 
@@ -97,11 +108,11 @@ suite('highlightExercise', () => {
 suite('clearExerciseHighlights', () => {
     let sandbox: sinon.SinonSandbox;
 
-    suiteSetup(() => {
+    setup(() => {
         sandbox = sinon.createSandbox();
     });
 
-    suiteTeardown(() => {
+    teardown(() => {
         sandbox.restore();
     });
 

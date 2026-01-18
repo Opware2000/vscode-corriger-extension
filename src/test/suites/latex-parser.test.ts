@@ -238,7 +238,7 @@ Contenu sans enonce
 
     test('[P2] should truncate long enonce titles', () => {
         // GIVEN: Exercise with long enonce
-        const longEnonce = 'A'.repeat(60);
+        const longEnonce = 'A'.repeat(110);
         const content = `\\begin{exercice}
 \\begin{enonce}
 ${longEnonce}
@@ -251,7 +251,7 @@ ${longEnonce}
         // THEN: Title is truncated
         assert.strictEqual(exercises.length, 1);
         assert.ok(exercises[0].title!.endsWith('...'));
-        assert.strictEqual(exercises[0].title!.length, 53); // 50 + '...'
+        assert.strictEqual(exercises[0].title!.length, 103); // 100 + '...'
     });
 
     test('[P1] should mark exercises with correction as IGNORED', () => {
