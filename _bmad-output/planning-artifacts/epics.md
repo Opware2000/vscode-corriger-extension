@@ -20,19 +20,19 @@ FR4: L'extension peut analyser la structure des exercices avec balises `\begin{e
 FR5: L'enseignant peut générer des corrections pédagogiques complètes pour les exercices détectés
 FR6: L'extension peut adapter le niveau pédagogique au lycée (seconde, première, terminale)
 FR7: L'extension peut structurer les corrections avec numérotation et format LaTeX approprié
-FR8: L'extension peut respecter la notation mathématique française (probabilités conditionnelles P_A(B))
-FR9: L'extension peut vérifier automatiquement l'exactitude de tous les calculs dans les corrections
-FR10: L'enseignant peut voir les calculs vérifiés avec indication de validation
-FR11: L'extension peut résoudre les équations du second degré avec formule du discriminant
-FR12: L'extension peut développer et factoriser des expressions algébriques
+FR8: L'extension peut guider l'IA pour respecter la notation mathématique française (probabilités conditionnelles P_A(B))
+FR9: L'IA peut vérifier automatiquement l'exactitude de tous les calculs dans les corrections générées
+FR10: L'IA peut marquer les calculs vérifiés avec indication de validation dans les corrections
+FR11: L'IA peut résoudre les équations du second degré avec formule du discriminant
+FR12: L'IA peut développer et factoriser des expressions algébriques
 FR13: L'enseignant peut lancer la correction via la palette de commandes VS Code
 FR14: L'enseignant peut utiliser @corriger dans le chat Copilot pour corriger
 FR15: L'extension peut corriger l'exercice au niveau du curseur
 FR16: L'extension peut traiter tous les exercices d'un document en une seule opération
-FR17: L'extension peut générer automatiquement des graphiques TikZ pour les exercices mathématiques
-FR18: L'extension peut créer des arbres de probabilité orientés horizontalement
-FR19: L'extension peut produire des tableaux de variation avec signes des dérivées
-FR20: L'extension peut intégrer les graphiques dans le format LaTeX des corrections
+FR17: L'IA peut générer automatiquement des graphiques TikZ pour les exercices mathématiques
+FR18: L'IA peut créer des arbres de probabilité orientés horizontalement
+FR19: L'IA peut produire des tableaux de variation avec signes des dérivées
+FR20: L'IA peut intégrer les graphiques dans le format LaTeX des corrections
 FR21: L'extension peut informer l'utilisateur quand aucun exercice n'est détecté
 FR22: L'extension peut gérer l'indisponibilité de l'IA avec message approprié
 FR23: L'extension peut proposer des alternatives quand l'IA n'est pas disponible
@@ -58,9 +58,9 @@ FR24: L'extension peut corriger automatiquement les erreurs de format LaTeX gén
 ### Additional Requirements
 
 - Utilisation du starter template officiel VS Code (yo code) pour initialiser le projet
-- Architecture modulaire avec séparation des responsabilités : Extension VS Code, Parsing LaTeX, Génération IA, Vérification Python, Génération TikZ
-- Technologies clés : TypeScript pour l'extension, Python avec sympy pour vérifications mathématiques, Copilot pour génération IA, TikZ pour graphiques
-- Intégrations : VS Code API pour commandes et éditeur, Copilot Chat pour @corriger, sous-processus Python pour calculs
+- Architecture modulaire avec séparation des responsabilités : Extension VS Code (détection, interface), Parsing LaTeX, Génération de prompts IA, IA (génération de corrections, calculs, graphiques TikZ)
+- Technologies clés : TypeScript pour l'extension, IA (Copilot/OpenAI) pour génération de corrections, calculs et graphiques
+- Intégrations : VS Code API pour commandes et éditeur, Copilot Chat pour @corriger, IA pour tout le contenu mathématique
 - Patterns et pratiques : Modularité, gestion d'erreurs gracieuse, performance optimisée, sécurité et isolation des processus
 
 ### FR Coverage Map
@@ -101,17 +101,17 @@ Permet à l'enseignant de générer des corrections pédagogiques complètes ada
 **FRs couverts:** FR5, FR6, FR7, FR8
 
 ### Epic 3: Vérification Mathématique Automatique
-Permet à l'extension de vérifier automatiquement l'exactitude des calculs et de résoudre des équations complexes.
-**FRs couverts:** FR9, FR10, FR11, FR12
 
+Permet à l'IA de vérifier automatiquement l'exactitude des calculs et de résoudre des équations complexes dans les corrections générées.
+**FRs couverts:** FR9, FR10, FR11, FR12
 ### Epic 4: Intégration Avancée VS Code et Copilot
 Permet à l'enseignant d'utiliser l'extension via différentes méthodes : palette de commandes, Copilot @corriger, curseur, traitement global.
 **FRs couverts:** FR13, FR14, FR15, FR16
 
 ### Epic 5: Production de Graphiques Mathématiques
-Permet à l'extension de générer automatiquement des graphiques TikZ (arbres de probabilité, tableaux de variation) intégrés aux corrections.
-**FRs couverts:** FR17, FR18, FR19, FR20
 
+Permet à l'IA de générer automatiquement des graphiques TikZ (arbres de probabilité, tableaux de variation) intégrés aux corrections.
+**FRs couverts:** FR17, FR18, FR19, FR20
 ### Epic 6: Gestion d'Erreurs et Robustesse
 Permet à l'extension de gérer gracieusement les erreurs, indisponibilité IA, et de maintenir la continuité de service.
 **FRs couverts:** FR21, FR22, FR23, FR24
@@ -235,7 +235,7 @@ Permet à l'extension de vérifier automatiquement l'exactitude des calculs et d
 ### Story 3.1: Vérification automatique de l'exactitude des calculs
 
 As an enseignant de maths,
-I want que l'extension vérifie automatiquement l'exactitude de tous les calculs dans les corrections,
+I want que l'IA vérifie automatiquement l'exactitude de tous les calculs dans les corrections générées,
 So that je suis assuré de la fiabilité des solutions générées.
 
 **Acceptance Criteria:**
@@ -261,7 +261,7 @@ So that je peux identifier facilement les parties validées.
 ### Story 3.3: Résolution d'équations du second degré
 
 As an enseignant de maths,
-I want que l'extension résolve les équations du second degré avec formule du discriminant,
+I want que l'IA résolve les équations du second degré avec formule du discriminant,
 So that les solutions quadratiques sont correctement calculées.
 
 **Acceptance Criteria:**
@@ -274,7 +274,7 @@ So that les solutions quadratiques sont correctement calculées.
 ### Story 3.4: Développement et factorisation d'expressions
 
 As an enseignant de maths,
-I want que l'extension développe et factorise des expressions algébriques,
+I want que l'IA développe et factorise des expressions algébriques,
 So that les manipulations algébriques sont précises.
 
 **Acceptance Criteria:**
@@ -347,7 +347,7 @@ Permet à l'extension de générer automatiquement des graphiques TikZ (arbres d
 ### Story 5.1: Génération automatique de graphiques TikZ
 
 As an enseignant de maths,
-I want que l'extension génère automatiquement des graphiques TikZ pour les exercices mathématiques,
+I want que l'IA génère automatiquement des graphiques TikZ pour les exercices mathématiques,
 So that les corrections incluent des représentations visuelles.
 
 **Acceptance Criteria:**
@@ -360,33 +360,33 @@ So that les corrections incluent des représentations visuelles.
 ### Story 5.2: Création d'arbres de probabilité horizontaux
 
 As an enseignant de maths,
-I want que l'extension crée des arbres de probabilité orientés horizontalement,
+I want que l'IA crée des arbres de probabilité orientés horizontalement,
 So that les représentations probabilistes sont claires.
 
 **Acceptance Criteria:**
 
 **Given** un exercice de probabilités avec arbre
-**When** l'extension génère le graphique
+**When** l'IA génère le graphique
 **Then** l'arbre est orienté horizontalement
 **And** les probabilités sont correctement positionnées
 
 ### Story 5.3: Production de tableaux de variation
 
 As an enseignant de maths,
-I want que l'extension produise des tableaux de variation avec signes des dérivées,
+I want que l'IA produise des tableaux de variation avec signes des dérivées,
 So that l'analyse fonctionnelle est visualisée.
 
 **Acceptance Criteria:**
 
 **Given** une fonction à analyser
-**When** l'extension crée le tableau de variation
+**When** l'IA crée le tableau de variation
 **Then** il montre les intervalles et signes des dérivées
 **And** il respecte le format LaTeX standard
 
 ### Story 5.4: Intégration des graphiques dans les corrections
 
 As an enseignant de maths,
-I want que les graphiques soient intégrés dans le format LaTeX des corrections,
+I want que l'IA intègre les graphiques dans le format LaTeX des corrections,
 So that ils se compilent correctement avec le document.
 
 **Acceptance Criteria:**
