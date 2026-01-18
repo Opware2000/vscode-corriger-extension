@@ -214,4 +214,46 @@ Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans
             await generateCorrection('Mock exercise content');
         }, /Clé API OpenAI non configurée/i);
     });
+
+    test('[P1] should include verification instructions with visual formatting in pedagogical prompt', () => {
+        // GIVEN: Mock extension context and file system
+        const mockVerificationContent = `# Instructions de vérification automatique des calculs
+
+## Vérification systématique des calculs avec affichage visuel
+
+Avant de fournir votre réponse finale, vous devez vérifier automatiquement l'exactitude de tous les calculs mathématiques présents dans votre correction et utiliser un formatage visuel LaTeX pour indiquer la validation :
+
+### Processus de vérification et affichage :
+1. **Identifier tous les calculs** : Repérer chaque opération mathématique (addition, soustraction, multiplication, division, puissances, racines, etc.)
+2. **Vérifier étape par étape** : Pour chaque calcul, recalculer mentalement ou logiquement la valeur
+3. **Marquer visuellement les calculs vérifiés** : Entourer chaque calcul validé avec \`\\textcolor{green}{}\` pour l'affichage en vert
+4. **Marquer les calculs suspects** : Entourer les calculs qui ne peuvent pas être vérifiés ou suspects avec \`\\textcolor{red}{}\` pour l'affichage en rouge
+5. **Ajouter commentaires internes** : Maintenir les commentaires LaTeX \`% Calcul vérifié automatiquement\` et \`% Calcul à vérifier manuellement\` pour référence interne`;
+
+        const mockExtensionContext = {
+            extensionUri: vscode.Uri.file('/mock/extension/path')
+        } as vscode.ExtensionContext;
+
+        // Mock fs.readFileSync
+        sandbox.stub(require('fs'), 'readFileSync').returns(mockVerificationContent);
+
+        // Mock configuration
+        sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+            get: sandbox.stub().returns('')
+        } as any);
+
+        // Sample exercise content
+        const exerciseContent = '\\begin{exercice}\nRésoudre x + 1 = 0\n\\end{exercice}';
+
+        // WHEN: Generating pedagogical prompt with extension context
+        const prompt = generatePedagogicalPrompt(exerciseContent, undefined, mockExtensionContext);
+
+        // THEN: Prompt includes verification instructions with visual formatting
+        assert.ok(prompt.includes('Instructions de vérification automatique des calculs'));
+        assert.ok(prompt.includes('affichage visuel'));
+        assert.ok(prompt.includes('\\textcolor{green}{}'));
+        assert.ok(prompt.includes('\\textcolor{red}{}'));
+        assert.ok(prompt.includes('% Calcul vérifié automatiquement'));
+        assert.ok(prompt.includes('% Calcul à vérifier manuellement'));
+    });
 });
