@@ -552,7 +552,9 @@ async function handleCorrigerCommand(extensionContext: vscode.ExtensionContext):
 				handleCorrectionError(error);
 				// En cas d'erreur batch, essayer de générer individuellement
 				for (const exercise of exercisesToCorrect) {
-					if (token.isCancellationRequested) break;
+					if (token.isCancellationRequested) {
+						break;
+					}
 					try {
 						await generateAndInsertCorrection(exercise, content, progress, token, extensionContext, false);
 						completed++;

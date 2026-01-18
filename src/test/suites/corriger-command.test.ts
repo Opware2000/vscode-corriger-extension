@@ -174,7 +174,7 @@ suite('corriger command', () => {
             const result = await generateBatchCorrections(exercises, documentContent);
             // THEN: Should return empty array
             assert.deepEqual(result, [], 'Devrait retourner un tableau vide pour un batch vide');
-        } catch (error) {
+        } catch {
             // Acceptable si l'IA n'est pas configurée, mais ne devrait pas crasher
             assert.ok(true, 'Erreur acceptable pour batch vide si IA non configurée');
         }
