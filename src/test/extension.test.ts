@@ -307,6 +307,60 @@ ${longEnonce}
 			assert.ok(exercises[0].title!.endsWith('...'));
 			assert.strictEqual(exercises[0].title!.length, 53); // 50 + '...'
 		});
+
+		test('[P1] should mark exercises with correction as IGNORED', () => {
+			// GIVEN: Exercise with correction
+			const content = `\\begin{exercice}
+\\begin{enonce}
+Résoudre x + 1 = 0
+\\end{enonce}
+\\begin{correction}
+x = -1
+\\end{correction}
+\\end{exercice}`;
+
+			// WHEN: Detecting exercises
+			const exercises = detectExercises(content);
+
+			// THEN: Exercise is marked as IGNORED
+			assert.strictEqual(exercises.length, 1);
+			assert.strictEqual(exercises[0].status, ExerciseStatus.IGNORED);
+		});
+
+		test('[P1] should mark exercises without correction as PENDING', () => {
+			// GIVEN: Exercise without correction
+			const content = `\\begin{exercice}
+\\begin{enonce}
+Résoudre x + 1 = 0
+\\end{enonce}
+\\end{exercice}`;
+
+			// WHEN: Detecting exercises
+			const exercises = detectExercises(content);
+
+			// THEN: Exercise is marked as PENDING
+			assert.strictEqual(exercises.length, 1);
+			assert.strictEqual(exercises[0].status, ExerciseStatus.PENDING);
+		});
+
+		test('[P2] should handle exercises with malformed correction gracefully', () => {
+			// GIVEN: Exercise with malformed correction (missing end tag)
+			const content = `\\begin{exercice}
+\\begin{enonce}
+Résoudre x + 1 = 0
+\\end{enonce}
+\\begin{correction}
+x = -1
+Contenu après sans end
+\\end{exercice}`;
+
+			// WHEN: Detecting exercises
+			const exercises = detectExercises(content);
+
+			// THEN: Exercise is marked as PENDING due to malformed correction
+			assert.strictEqual(exercises.length, 1);
+			assert.strictEqual(exercises[0].status, ExerciseStatus.PENDING);
+		});
 	});
 
 	suite('parseExerciseStructure', () => {

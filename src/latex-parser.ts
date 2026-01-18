@@ -7,7 +7,7 @@ import { configService } from './config-service';
  */
 export enum ExerciseStatus {
     PENDING = 'pending',
-    CORRECTED = 'corrected'
+    IGNORED = 'ignored'
 }
 
 /**
@@ -102,7 +102,7 @@ export function* generateExercises(content: string): Generator<Exercise, void, u
             end: end,
             content: exerciseContent,
             title: title,
-            status: structure.correction ? ExerciseStatus.CORRECTED : ExerciseStatus.PENDING
+            status: structure.correction ? ExerciseStatus.IGNORED : ExerciseStatus.PENDING
         };
 
         yield exercise;
@@ -164,7 +164,7 @@ export function detectExercises(content: string): Exercise[] {
             end: end,
             content: exerciseContent,
             title: title,
-            status: structure.correction ? ExerciseStatus.CORRECTED : ExerciseStatus.PENDING
+            status: structure.correction ? ExerciseStatus.IGNORED : ExerciseStatus.PENDING
         });
 
         exerciseNumber++;
