@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import * as path from 'path';
 import { generateCorrectionWithOpenAI } from './openai-integration';
 import { callCopilotWithTimeout, isCopilotAvailable } from './copilot-integration';
 import { analyzeDocumentStructure, formatCorrectionWithLatexEnvironments } from './latex-parser';
-import { MESSAGES, FRENCH_MATH_NOTATIONS, FRENCH_MATH_VOCABULARY } from './constants';
+import { MESSAGES } from './constants';
 import { logger } from './logger';
 import { getConfig } from './config';
 
