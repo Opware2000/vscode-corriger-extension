@@ -206,6 +206,73 @@ async function showCorrectionPreview(correction: string): Promise<'insert' | 're
 }
 
 /**
+ * Gère les requêtes du participant de chat "corriger"
+ * @param request La requête du chat
+ * @param context Le contexte du chat
+ * @param response Le stream de réponse
+ * @param token Token d'annulation
+ */
+async function handleChatParticipantRequest(
+	_request: vscode.ChatRequest,
+	_context: vscode.ChatContext,
+	response: vscode.ChatResponseStream,
+	token: vscode.CancellationToken
+): Promise<void> {
+	try {
+		// Analyser le contexte de correction (document, sélection, curseur)
+		const documentContent = getActiveDocumentContent();
+		if (!documentContent) {
+			response.markdown('Aucun document actif trouvé. Ouvrez un fichier LaTeX contenant des exercices.');
+			return;
+		}
+
+		// Détecter les exercices
+		const exercises = detectExercises(documentContent);
+		if (exercises.length === 0) {
+			response.markdown('Aucun exercice LaTeX détecté dans le document actif.');
+			return;
+		}
+
+		// Analyser la requête pour déterminer le contexte
+		let targetExercise: Exercise | null = null;
+
+		// Vérifier s'il y a une sélection active
+		const activeEditor = vscode.window.activeTextEditor;
+		if (activeEditor && !activeEditor.selection.isEmpty) {
+			// Utiliser la sélection
+			const selectedText = activeEditor.document.getText(activeEditor.selection);
+			// Trouver l'exercice contenant la sélection
+			targetExercise = exercises.find(ex =>
+				ex.start <= activeEditor.document.offsetAt(activeEditor.selection.start) &&
+				ex.end >= activeEditor.document.offsetAt(activeEditor.selection.end)
+			) || null;
+		} else if (activeEditor) {
+			// Utiliser la position du curseur
+			const cursorPosition = activeEditor.selection.active;
+			const cursorOffset = activeEditor.document.offsetAt(cursorPosition);
+			// Trouver l'exercice le plus proche
+			targetExercise = exercises.find(ex => ex.start <= cursorOffset && ex.end >= cursorOffset) || null;
+		}
+
+		if (!targetExercise) {
+			response.markdown(`Exercices détectés (${exercises.length}), mais aucun n'est sélectionné ou sous le curseur. Utilisez la sélection ou placez le curseur dans un exercice.`);
+			return;
+		}
+
+		// Générer la correction
+		response.markdown(`Génération de la correction pour l'exercice ${targetExercise.number}...`);
+
+		const correction = await generateCorrection(targetExercise.content, documentContent, token);
+
+		response.markdown(`**Correction de l'exercice ${targetExercise.number} :**\n\n${correction}`);
+
+	} catch (error) {
+		logger.error('Erreur dans le participant de chat corriger', error as Error);
+		response.markdown('Erreur lors de la génération de correction. Vérifiez les logs pour plus de détails.');
+	}
+}
+
+/**
  * Gère les erreurs de génération de correction
  * @param error L'erreur à traiter
  */
@@ -420,6 +487,22 @@ function registerCommands(context: vscode.ExtensionContext): void {
 	context.subscriptions.push(corrigerDisposable);
 }
 
+/**
+ * Enregistre le participant de chat "corriger"
+ * @param context Contexte d'extension VSCode
+ */
+function registerChatParticipant(context: vscode.ExtensionContext): void {
+	// Vérifier si l'API de chat est disponible
+	if (typeof vscode.chat?.createChatParticipant === 'function') {
+		const chatParticipant = vscode.chat.createChatParticipant('corriger', handleChatParticipantRequest);
+		chatParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'resources', 'icon.png'); // Optionnel
+		context.subscriptions.push(chatParticipant);
+		logger.info('Participant de chat "corriger" enregistré');
+	} else {
+		logger.warn('API de chat non disponible - participant de chat non enregistré');
+	}
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -432,6 +515,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Enregistrer les commandes
 	registerCommands(context);
+
+	// Enregistrer le participant de chat
+	registerChatParticipant(context);
 }
 
 // This method is called when your extension is deactivated

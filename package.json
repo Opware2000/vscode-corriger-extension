@@ -38,6 +38,14 @@
         "when": "editorTextFocus && resourceExtname == .tex"
       }
     ],
+    "chatParticipants": [
+      {
+        "id": "corriger",
+        "name": "corriger",
+        "description": "Assistant de correction d'exercices LaTeX pour les enseignants de mathématiques",
+        "isSticky": true
+      }
+    ],
     "configuration": {
       "title": "VSCode Corriger Extension",
       "properties": {
