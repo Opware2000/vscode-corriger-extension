@@ -289,6 +289,62 @@ async function handleGenerateCorrectionCommand(): Promise<void> {
 }
 
 /**
+ * Gère la commande de correction globale du document
+ */
+async function handleCorrigerCommand(): Promise<void> {
+	logger.info('Début de la commande corriger');
+
+	// Valider et récupérer le contenu du document
+	const content = await validateAndGetDocumentContent();
+	if (!content) {
+		return;
+	}
+
+	// Détecter les exercices
+	const exercises = detectExercises(content);
+	if (exercises.length === 0) {
+		vscode.window.showInformationMessage(MESSAGES.NO_EXERCISES_FOUND);
+		return;
+	}
+
+	logger.info(`${exercises.length} exercices détectés pour correction globale`);
+
+	// Générer les corrections pour tous les exercices avec progression
+	await vscode.window.withProgress({
+		location: vscode.ProgressLocation.Notification,
+		title: 'Génération des corrections',
+		cancellable: true
+	}, async (progress, token) => {
+		let completed = 0;
+		const total = exercises.length;
+
+		for (const exercise of exercises) {
+			if (token.isCancellationRequested) {
+				break;
+			}
+
+			progress.report({
+				increment: (completed / total) * 100,
+				message: `Correction de l'exercice ${exercise.number}...`
+			});
+
+			try {
+				await generateAndInsertCorrection(exercise, content, progress, token);
+				completed++;
+			} catch (error) {
+				handleCorrectionError(error);
+				// Continue avec les autres exercices même en cas d'erreur
+			}
+		}
+
+		if (completed > 0) {
+			vscode.window.showInformationMessage(`${completed} corrections générées avec succès`);
+			logger.info(`${completed} corrections générées avec succès`);
+		}
+	});
+}
+
+/**
  * Enregistre les commandes de l'extension
  * @param context Contexte d'extension VSCode
  */
@@ -306,6 +362,13 @@ function registerCommands(context: vscode.ExtensionContext): void {
 		handleGenerateCorrectionCommand
 	);
 	context.subscriptions.push(generateCorrectionDisposable);
+
+	// Commande de correction globale
+	const corrigerDisposable = vscode.commands.registerCommand(
+		'vscode-corriger-extension.corriger',
+		handleCorrigerCommand
+	);
+	context.subscriptions.push(corrigerDisposable);
 }
 
 // This method is called when your extension is activated
