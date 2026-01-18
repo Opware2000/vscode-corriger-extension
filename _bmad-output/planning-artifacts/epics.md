@@ -98,8 +98,8 @@ Permet à l'enseignant de générer des corrections pédagogiques complètes ada
 
 ### Epic 3: Vérification Mathématique Automatique
 
-Permet à l'IA de vérifier automatiquement l'exactitude des calculs et de résoudre des équations complexes dans les corrections générées.
-**FRs couverts:** FR9, FR10, FR11, FR12
+Permet à l'IA de vérifier automatiquement l'exactitude des calculs dans les corrections générées.
+**FRs couverts:** FR9, FR10
 ### Epic 4: Intégration Avancée VS Code et Copilot
 Permet à l'enseignant d'utiliser l'extension via différentes méthodes : palette de commandes, Copilot @corriger, curseur, traitement global.
 **FRs couverts:** FR13, FR14, FR15, FR16
