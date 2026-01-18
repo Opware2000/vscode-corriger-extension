@@ -1,6 +1,6 @@
 # Story 4.1: lancement-via-palette-de-commandes-vs-code
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -66,6 +66,17 @@ x-ai/grok-code-fast-1
 - Tests unitaires pour vérifier l'enregistrement et l'exécution de la commande
 - Utilisation de vscode.window.withProgress pour l'interface utilisateur pendant la génération
 
+### Corrections appliquées lors de la revue de code
+
+- Correction du bug de calcul de la barre de progression dans handleCorrigerCommand (incrément cumulatif incorrect)
+- Ajout de vérification des exercices déjà corrigés pour éviter les corrections inutiles
+- Suppression des barres de progression imbriquées en ajoutant un paramètre preview à generateAndInsertCorrection
+- Amélioration des messages d'erreur avec des détails spécifiques pour Copilot, OpenAI, etc.
+- Ajout de logging des échecs individuels dans la correction globale
+- Ajout de message d'annulation utilisateur
+- Amélioration du comptage des corrections avec indication des échecs
+- Ajout de tests pour la gestion des exercices corrigés et l'annulation
+
 ### File List
 
 - package.json: Ajout de la commande "vscode-corriger-extension.corriger" et de l'événement d'activation
@@ -75,3 +86,4 @@ x-ai/grok-code-fast-1
 ## Change Log
 
 - Implémentation complète de la fonctionnalité de lancement via palette de commandes (2026-01-18)
+- Corrections appliquées suite à la revue de code : bugs de progression, vérification des exercices corrigés, amélioration des messages d'erreur et tests (2026-01-18)
