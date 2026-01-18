@@ -896,6 +896,69 @@ Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans
 			assert.strictEqual(prompt, 'Custom prompt with Test exercise content placeholder');
 		});
 
+		test('[P1] should include automatic calculation verification instructions in pedagogical prompt', () => {
+			// GIVEN: Mock configuration with default pedagogicalPrompt
+			const defaultPrompt = `Vous êtes un professeur de mathématiques expérimenté enseignant en France. Voici un exercice LaTeX du programme français de mathématiques :
+
+{{exerciseContent}}{{documentContext}}
+
+Générez une correction pédagogique complète et détaillée en français, adaptée au niveau lycée. La correction doit :
+
+- Respecter strictement le programme officiel français de mathématiques
+- Utiliser le vocabulaire mathématique français approprié :
+		* calculer au lieu de "calculate"
+		* simplifier au lieu de "simplify"
+		* résoudre au lieu de "solve"
+		* démontrer au lieu de "prove"
+		* conclure au lieu de "conclude"
+		* donc au lieu de "therefore"
+		* car au lieu de "because"
+
+- Respecter les notations mathématiques françaises :
+		* Probabilités conditionnelles : utiliser P_A(B) au lieu de P(B|A) (exemple : P_A(B) = 0,3)
+		* Espérance : E[X] (exemple : E[X] = 5)
+		* Variance : V(X) (exemple : V(X) = 2,5)
+		* Écart-type : σ(X) (exemple : σ(X) = 1,58)
+		* Moyenne : $\\bar{x}$ (exemple : $\\bar{x}$ = 4,2)
+		* Médiane : Me (exemple : Me = 3)
+		* Mode : Mo (exemple : Mo = 2)
+		* Intervalles : ]a,b[ pour ouvert, [a,b] pour fermé
+		* Ensembles : $\\mathbb{N}$ naturels, $\\mathbb{Z}$ entiers, $\\mathbb{Q}$ rationnels, $\\mathbb{R}$ réels
+		* Fonctions : f: x $\\mapsto$ f(x) (exemple : f: x $\\mapsto$ x²)
+		* Nombres décimaux : utiliser la virgule (3,14 au lieu de 3.14)
+		* Grands nombres : utiliser l'espace (1 000 000 au lieu de 1,000,000)
+
+- Expliquer chaque étape clairement et pédagogiquement
+- Utiliser un langage accessible aux élèves de lycée
+- Inclure des justifications mathématiques rigoureuses
+- Respecter les conventions pédagogiques françaises
+- Être structurée de manière logique et progressive
+- Inclure des diagrammes TikZ si nécessaire pour les problèmes de géométrie
+- Fournir des exemples concrets quand cela aide la compréhension
+
+Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans balises \\begin{correction} ou \\end{correction}.`;
+			sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+				get: sandbox.stub().callsFake((key: string) => {
+					if (key === 'pedagogicalPrompt') {
+						return defaultPrompt;
+					}
+					return '';
+				})
+			} as any);
+
+			// Sample exercise content
+			const exerciseContent = '\\begin{exercice}\nRésoudre x + 1 = 0\n\\end{exercice}';
+
+			// WHEN: Generating pedagogical prompt
+			const prompt = generatePedagogicalPrompt(exerciseContent);
+
+			// THEN: Prompt includes automatic calculation verification instructions
+			assert.ok(prompt.includes('Vérification systématique des calculs'));
+			assert.ok(prompt.includes('Vérifiez chaque étape de calcul'));
+			assert.ok(prompt.includes('% Calcul vérifié automatiquement'));
+			assert.ok(prompt.includes('Vérifiez TOUS les calculs'));
+		});
+
 		test('[P1] should generate correction using OpenAI', async () => {
 			// GIVEN: Mock OpenAI API
 			const mockOpenAIResponse = {

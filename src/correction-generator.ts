@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 import { generateCorrectionWithOpenAI } from './openai-integration';
 import { callCopilotWithTimeout, isCopilotAvailable } from './copilot-integration';
 import { analyzeDocumentStructure, formatCorrectionWithLatexEnvironments } from './latex-parser';
@@ -21,9 +23,11 @@ export function generatePedagogicalPrompt(exerciseContent: string, documentStruc
     const config = vscode.workspace.getConfiguration('vscode-corriger-extension');
     const template = config.get('pedagogicalPrompt', '') as string;
 
+    let prompt: string;
+
     if (template && template.trim()) {
         // Replace the placeholder with actual exercise content
-        let prompt = template.replace('{{exerciseContent}}', exerciseContent);
+        prompt = template.replace('{{exerciseContent}}', exerciseContent);
 
         // Add document structure context if available
         if (documentStructure) {
@@ -32,12 +36,21 @@ export function generatePedagogicalPrompt(exerciseContent: string, documentStruc
         } else {
             prompt = prompt.replace('{{documentContext}}', '');
         }
-
-        return prompt;
+    } else {
+        // Fallback minimal si configuration vide
+        prompt = `Vous êtes un professeur de mathématiques. Corrigez cet exercice LaTeX : ${exerciseContent}`;
     }
 
-    // Fallback minimal si configuration vide
-    return `Vous êtes un professeur de mathématiques. Corrigez cet exercice LaTeX : ${exerciseContent}`;
+    // Append verification instructions
+    const verificationPath = path.join(__dirname, 'prompts', 'verification-instructions.md');
+    try {
+        const verificationInstructions = fs.readFileSync(verificationPath, 'utf8');
+        prompt += '\n\n' + verificationInstructions;
+    } catch (error) {
+        logger.warn('Could not load verification instructions', error as Error);
+    }
+
+    return prompt;
 }
 
 /**

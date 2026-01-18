@@ -58,8 +58,8 @@ development_status:
   2-4-respect-de-la-notation-mathematique-francaise: done
   epic-2-retrospective: optional
 
-  epic-3: backlog
-  3-1-verification-automatique-de-l-exactitude-des-calculs: backlog
+  epic-3: in-progress
+  3-1-verification-automatique-de-l-exactitude-des-calculs: in-progress
   3-2-affichage-des-calculs-verifies-avec-validation: backlog
   3-3-resolution-d-equations-du-second-degre: backlog
   3-4-developpement-et-factorisation-d-expressions: backlog
