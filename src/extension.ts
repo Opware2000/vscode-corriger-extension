@@ -107,43 +107,67 @@ async function handleCorrectionPreviewAndRegeneration(
 }
 
 /**
- * Génère et insère la correction dans le document avec prévisualisation
+ * Génère et insère la correction dans le document
  * @param exercise L'exercice pour lequel générer la correction
+ * @param documentContent Contenu du document
  * @param progress Objet de progression pour mettre à jour l'UI
  * @param token Token d'annulation
+ * @param preview Si true, affiche une prévisualisation avant insertion
  */
-async function generateAndInsertCorrection(exercise: Exercise, documentContent: string, progress: vscode.Progress<{ increment: number; message: string }>, token: vscode.CancellationToken): Promise<void> {
-	progress.report({ increment: 0, message: 'Préparation...' });
-
-	const initialCorrection = await generateSingleCorrection(exercise.content, documentContent, token);
-
-	progress.report({ increment: 100, message: 'Prévisualisation...' });
-
-	const finalCorrection = await handleCorrectionPreviewAndRegeneration(
-		initialCorrection,
-		exercise.content,
-		documentContent,
-		progress,
-		token
-	);
-
-	if (!finalCorrection) {
-		return; // Annulé par l'utilisateur
-	}
-
-	// Insérer la correction dans le document
-	const editor = vscode.window.activeTextEditor;
-	if (editor) {
-		// Trouver la position de fin de l'exercice (avant \end{exercice})
-		const endTagIndex = exercise.content.lastIndexOf('\\end{exercice}');
-		const insertPosition = endTagIndex !== -1 ?
-			editor.document.positionAt(exercise.start + endTagIndex) :
-			editor.document.positionAt(exercise.end);
-
-		await editor.edit(editBuilder => {
-			editBuilder.insert(insertPosition, '\n' + finalCorrection);
+async function generateAndInsertCorrection(exercise: Exercise, documentContent: string, progress: vscode.Progress<{ increment: number; message: string }>, token: vscode.CancellationToken, preview: boolean = true): Promise<void> {
+	if (preview) {
+		// Mode avec prévisualisation (pour correction unique)
+		const initialCorrection = await vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: 'Génération de la correction',
+			cancellable: true
+		}, async (innerProgress, innerToken) => {
+			innerProgress.report({ increment: 0, message: 'Préparation...' });
+			const correction = await generateSingleCorrection(exercise.content, documentContent, innerToken);
+			innerProgress.report({ increment: 100, message: 'Prévisualisation...' });
+			return correction;
 		});
-		vscode.window.showInformationMessage(MESSAGES.CORRECTION_GENERATED);
+
+		const finalCorrection = await handleCorrectionPreviewAndRegeneration(
+			initialCorrection,
+			exercise.content,
+			documentContent,
+			progress,
+			token
+		);
+
+		if (!finalCorrection) {
+			return; // Annulé par l'utilisateur
+		}
+
+		// Insérer la correction dans le document
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const endTagIndex = exercise.content.lastIndexOf('\\end{exercice}');
+			const insertPosition = endTagIndex !== -1 ?
+				editor.document.positionAt(exercise.start + endTagIndex) :
+				editor.document.positionAt(exercise.end);
+
+			await editor.edit(editBuilder => {
+				editBuilder.insert(insertPosition, '\n' + finalCorrection);
+			});
+			vscode.window.showInformationMessage(MESSAGES.CORRECTION_GENERATED);
+		}
+	} else {
+		// Mode sans prévisualisation (pour correction globale)
+		const correction = await generateSingleCorrection(exercise.content, documentContent, token);
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const endTagIndex = exercise.content.lastIndexOf('\\end{exercice}');
+			const insertPosition = endTagIndex !== -1 ?
+				editor.document.positionAt(exercise.start + endTagIndex) :
+				editor.document.positionAt(exercise.end);
+
+			await editor.edit(editBuilder => {
+				editBuilder.insert(insertPosition, '\n' + correction);
+			});
+		}
 	}
 }
 
@@ -191,17 +215,17 @@ function handleCorrectionError(error: unknown): void {
 
 	logger.error('Erreur lors de la génération de correction', processedError as Error);
 
-	// Gérer les erreurs spécifiques
+	// Gérer les erreurs spécifiques avec messages améliorés
 	if (processedError instanceof CopilotError) {
-		vscode.window.showErrorMessage(MESSAGES.COPILOT_UNAVAILABLE);
+		vscode.window.showErrorMessage('L\'IA Copilot n\'est pas disponible. Vérifiez que GitHub Copilot est activé et connecté.');
 	} else if (processedError instanceof OpenAIError) {
-		vscode.window.showErrorMessage(processedError.message);
+		vscode.window.showErrorMessage(`Erreur OpenAI: ${processedError.message}. Vérifiez votre clé API et connexion.`);
 	} else if (processedError instanceof RateLimitError) {
-		vscode.window.showErrorMessage(MESSAGES.RATE_LIMIT_EXCEEDED);
+		vscode.window.showErrorMessage('Limite de taux dépassée. Veuillez attendre avant de réessayer.');
 	} else if (processedError instanceof CancellationError) {
-		vscode.window.showInformationMessage(MESSAGES.GENERATION_CANCELLED);
+		vscode.window.showInformationMessage('Génération annulée par l\'utilisateur.');
 	} else {
-		vscode.window.showErrorMessage(`Erreur lors de la génération de correction: ${processedError.message}`);
+		vscode.window.showErrorMessage(`Erreur inattendue lors de la génération: ${processedError.message}`);
 	}
 }
 
@@ -280,7 +304,7 @@ async function handleGenerateCorrectionCommand(): Promise<void> {
 		cancellable: true
 	}, async (progress, token) => {
 		try {
-			await generateAndInsertCorrection(selectedExercise, content, progress, token);
+			await generateAndInsertCorrection(selectedExercise, content, progress, token, true);
 			logger.info('Correction générée et insérée avec succès');
 		} catch (error) {
 			handleCorrectionError(error);
@@ -316,30 +340,55 @@ async function handleCorrigerCommand(): Promise<void> {
 		cancellable: true
 	}, async (progress, token) => {
 		let completed = 0;
+		let processed = 0;
 		const total = exercises.length;
 
-		for (const exercise of exercises) {
+		for (let i = 0; i < exercises.length; i++) {
+			const exercise = exercises[i];
+
 			if (token.isCancellationRequested) {
+				vscode.window.showInformationMessage('Correction annulée par l\'utilisateur');
 				break;
 			}
 
 			progress.report({
-				increment: (completed / total) * 100,
+				increment: 0,
 				message: `Correction de l'exercice ${exercise.number}...`
 			});
 
+			// Vérifier si l'exercice est déjà corrigé
+			const nextExerciseStart = exercises[i + 1]?.start ?? content.length;
+			const correctionStart = content.indexOf('\\begin{correction}', exercise.end);
+			if (correctionStart !== -1 && correctionStart < nextExerciseStart) {
+				logger.info(`Exercice ${exercise.number} déjà corrigé, ignoré`);
+				processed++;
+				progress.report({
+					increment: (1 / total) * 100,
+					message: processed === total ? 'Terminé' : `Correction de l'exercice ${exercises[i + 1]?.number || 'suivant'}...`
+				});
+				continue;
+			}
+
 			try {
-				await generateAndInsertCorrection(exercise, content, progress, token);
+				await generateAndInsertCorrection(exercise, content, progress, token, false);
 				completed++;
 			} catch (error) {
+				logger.error(`Erreur lors de la correction de l'exercice ${exercise.number}`, error as Error);
 				handleCorrectionError(error);
 				// Continue avec les autres exercices même en cas d'erreur
 			}
+
+			processed++;
+			progress.report({
+				increment: (1 / total) * 100,
+				message: processed === total ? 'Terminé' : `Correction de l'exercice ${exercises[i + 1]?.number || 'suivant'}...`
+			});
 		}
 
-		if (completed > 0) {
-			vscode.window.showInformationMessage(`${completed} corrections générées avec succès`);
-			logger.info(`${completed} corrections générées avec succès`);
+		if (completed > 0 || processed > 0) {
+			const failed = processed - completed;
+			vscode.window.showInformationMessage(`${completed}/${processed} corrections générées avec ${failed} échecs`);
+			logger.info(`${completed}/${processed} corrections générées avec ${failed} échecs`);
 		}
 	});
 }
