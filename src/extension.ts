@@ -42,6 +42,19 @@ function findExerciseAtCursor(exercises: Exercise[]): Exercise | null {
 }
 
 /**
+ * Vérifie si un exercice est déjà corrigé
+ * @param exercise L'exercice à vérifier
+ * @param exercises Liste de tous les exercices pour déterminer les limites
+ * @param content Contenu du document
+ * @returns true si l'exercice est déjà corrigé, false sinon
+ */
+function isExerciseAlreadyCorrected(exercise: Exercise, exercises: Exercise[], content: string): boolean {
+	const nextExerciseStart = exercises[exercises.indexOf(exercise) + 1]?.start ?? content.length;
+	const correctionStart = content.indexOf('\\begin{correction}', exercise.end);
+	return correctionStart !== -1 && correctionStart < nextExerciseStart;
+}
+
+/**
  * Détecte les exercices dans le contenu et valide qu'il y en a
  * @param content Le contenu LaTeX du document
  * @returns Tableau des exercices détectés
@@ -428,9 +441,7 @@ async function handleCorrigerAtCursorCommand(extensionContext: vscode.ExtensionC
 	}
 
 	// Vérifier si l'exercice est déjà corrigé
-	const nextExerciseStart = exercises[exercises.indexOf(cursorExercise) + 1]?.start ?? content.length;
-	const correctionStart = content.indexOf('\\begin{correction}', cursorExercise.end);
-	if (correctionStart !== -1 && correctionStart < nextExerciseStart) {
+	if (isExerciseAlreadyCorrected(cursorExercise, exercises, content)) {
 		vscode.window.showInformationMessage(`L'exercice ${cursorExercise.number} est déjà corrigé.`);
 		return;
 	}

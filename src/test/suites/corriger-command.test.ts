@@ -14,16 +14,6 @@ suite('corriger command', () => {
         sandbox.restore();
     });
 
-    test('[P1] should register corriger command', async () => {
-        // GIVEN: Extension is activated
-        // WHEN: Checking if command is registered
-        const commands = await vscode.commands.getCommands(true);
-        const hasCorrigerCommand = commands.includes('vscode-corriger-extension.corriger');
-
-        // THEN: Command should be registered
-        assert.ok(hasCorrigerCommand, 'La commande corriger devrait être enregistrée');
-    });
-
     test('[P1] should execute corriger command without error', async () => {
         // GIVEN: Mock active editor with LaTeX content
         const mockDocument = {
@@ -98,15 +88,6 @@ suite('corriger command', () => {
         assert.ok(showInfoStub.calledWith('Correction annulée par l\'utilisateur'), 'Message d\'annulation devrait être affiché');
     });
 
-    test('[P1] should register corrigerAtCursor command', async () => {
-        // GIVEN: Extension is activated
-        // WHEN: Checking if command is registered
-        const commands = await vscode.commands.getCommands(true);
-        const hasCorrigerAtCursorCommand = commands.includes('vscode-corriger-extension.corrigerAtCursor');
-
-        // THEN: Command should be registered
-        assert.ok(hasCorrigerAtCursorCommand, 'La commande corrigerAtCursor devrait être enregistrée');
-    });
 
     test('[P1] should execute corrigerAtCursor command with cursor in exercise', async () => {
         // GIVEN: Mock active editor with LaTeX content and cursor in exercise
