@@ -23,8 +23,6 @@ FR7: L'extension peut structurer les corrections avec numérotation et format La
 FR8: L'extension peut guider l'IA pour respecter la notation mathématique française (probabilités conditionnelles P_A(B))
 FR9: L'IA peut vérifier automatiquement l'exactitude de tous les calculs dans les corrections générées
 FR10: L'IA peut marquer les calculs vérifiés avec indication de validation dans les corrections
-FR11: L'IA peut résoudre les équations du second degré avec formule du discriminant
-FR12: L'IA peut développer et factoriser des expressions algébriques
 FR13: L'enseignant peut lancer la correction via la palette de commandes VS Code
 FR14: L'enseignant peut utiliser @corriger dans le chat Copilot pour corriger
 FR15: L'extension peut corriger l'exercice au niveau du curseur
