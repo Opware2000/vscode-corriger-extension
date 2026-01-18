@@ -73,8 +73,6 @@ FR7: Epic 2 - Structuration avec format LaTeX approprié
 FR8: Epic 2 - Respect de la notation mathématique française
 FR9: Epic 3 - Vérification automatique de l'exactitude des calculs
 FR10: Epic 3 - Affichage des calculs vérifiés avec validation
-FR11: Epic 3 - Résolution d'équations du second degré
-FR12: Epic 3 - Développement et factorisation d'expressions
 FR13: Epic 4 - Lancement via palette de commandes VS Code
 FR14: Epic 4 - Utilisation de @corriger dans Copilot
 FR15: Epic 4 - Correction au niveau du curseur
