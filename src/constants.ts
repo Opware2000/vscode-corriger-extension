@@ -52,7 +52,6 @@ export const FRENCH_MATH_NOTATIONS = {
     MEAN: '\\bar{x}', // Moyenne
     MEDIAN: 'Me', // Médiane
     MODE: 'Mo', // Mode
-    LIMIT: '\\lim', // Limite
     INTERVAL_OPEN: ']a,b[', // Intervalle ouvert
     INTERVAL_CLOSED: '[a,b]', // Intervalle fermé
     SET_NATURALS: '\\mathbb{N}', // Ensemble des naturels
@@ -64,23 +63,13 @@ export const FRENCH_MATH_NOTATIONS = {
 
 // French mathematical vocabulary
 export const FRENCH_MATH_VOCABULARY = {
-    SOLUTION: 'solution',
     CALCULATE: 'calculer',
     SIMPLIFY: 'simplifier',
-    FACTOR: 'factoriser',
-    DEVELOP: 'développer',
     RESOLVE: 'résoudre',
     DEMONSTRATE: 'démontrer',
-    VERIFY: 'vérifier',
     CONCLUDE: 'conclure',
     THEREFORE: 'donc',
     BECAUSE: 'car',
-    SINCE: 'puisque',
-    FOR_ALL: 'pour tout',
-    EXISTS: 'il existe',
-    EQUIVALENT: 'équivalent',
-    IDENTICAL: 'identique',
-    SIMILAR: 'semblable',
 } as const;
 
 // Decoration styles

@@ -111,12 +111,6 @@ export async function generateCorrection(
 
         logger.info('Correction générée avec succès');
 
-        // Valider le format TikZ si présent
-        const tikzValidation = validateTikZFormat(correction);
-        if (!tikzValidation.isValid) {
-            logger.warn('Correction contient du TikZ mal formaté', { errors: tikzValidation.errors });
-        }
-
         // Formater avec environnement LaTeX basique
         return formatCorrectionWithLatexEnvironments(correction.trim());
     } catch (error) {
@@ -139,32 +133,4 @@ export async function generateCorrection(
 
         throw new Error(`Erreur lors de la génération de correction: ${errorMessage}`);
     }
-}
-
-/**
- * Valide le format TikZ dans une correction LaTeX
- */
-function validateTikZFormat(correction: string): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-
-    // Compter les \begin{tikzpicture} et \end{tikzpicture}
-    const beginCount = (correction.match(/\\begin{tikzpicture}/g) || []).length;
-    const endCount = (correction.match(/\\end{tikzpicture}/g) || []).length;
-
-    if (beginCount !== endCount) {
-        errors.push(`Nombre d'environnements TikZ déséquilibré: ${beginCount} begin, ${endCount} end`);
-    }
-
-    // Vérifier les blocs TikZ mal fermés
-    const tikzBlocks = correction.split(/\\begin{tikzpicture}/);
-    for (let i = 1; i < tikzBlocks.length; i++) {
-        if (!tikzBlocks[i].includes('\\end{tikzpicture}')) {
-            errors.push(`Bloc TikZ ${i} non fermé`);
-        }
-    }
-
-    return {
-        isValid: errors.length === 0,
-        errors
-    };
 }

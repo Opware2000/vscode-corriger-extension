@@ -34,9 +34,9 @@ So that elles correspondent aux conventions utilisées en France.
    - [x] Subtask 2.2: Enrichir les prompts avec toutes les conventions françaises
    - [x] Subtask 2.3: Valider avec des exercices du programme lycée
 
-- [x] Task 3: Tests de validation des notations générées
-   - [x] Subtask 3.1: Ajouter des tests vérifiant que l'IA génère les bonnes notations
-   - [x] Subtask 3.2: Tests d'intégration avec différents types d'exercices
+- [x] Task 3: Tests de génération des prompts avec notations françaises
+    - [x] Subtask 3.1: Ajouter des tests vérifiant que les prompts incluent les bonnes instructions pour l'IA
+    - [x] Subtask 3.2: Tests d'intégration avec différents types d'exercices
 
 ## Dev Notes
 
@@ -51,10 +51,10 @@ So that elles correspondent aux conventions utilisées en France.
   - Tests unitaires pour validation des notations générées par l'IA
 
 - Testing standards summary
-  - Tests unitaires pour chaque règle de notation
-  - Tests d'intégration avec génération IA
-  - Tests de validation avec exercices réels du programme lycée
-  - Performance : génération <30 secondes même avec conversion notation
+   - Tests unitaires pour la génération des prompts avec notations françaises
+   - Tests d'intégration avec génération IA
+   - Tests de validation des prompts avec exercices réels du programme lycée
+   - Performance : génération <30 secondes même avec instructions détaillées
 
 ### Project Structure Notes
 
@@ -87,8 +87,9 @@ x-ai/grok-code-fast-1
 - Analyse exhaustive des artifacts réalisée pour contexte complet
 - Règles de notation française identifiées et implémentation planifiée
 - Intégration avec architecture existante validée
-- Implémentation terminée : prompts IA améliorés pour notation française
-- Tests unitaires ajoutés pour validation des notations
+- Implémentation terminée : prompts IA configurables avec notation française
+- Tests unitaires ajoutés pour validation des prompts
+- Simplification : suppression des validations inutiles du contenu IA
 - Toutes les tâches et sous-tâches marquées comme complètes
 - Code prêt pour revue
 
