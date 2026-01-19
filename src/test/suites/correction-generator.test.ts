@@ -256,4 +256,89 @@ Avant de fournir votre réponse finale, vous devez vérifier automatiquement l'e
         assert.ok(prompt.includes('% Calcul vérifié automatiquement'));
         assert.ok(prompt.includes('% Calcul à vérifier manuellement'));
     });
+
+    test('[P2] should include TikZ graphics generation instructions in pedagogical prompt', () => {
+        // GIVEN: Mock extension context and file system for TikZ instructions
+        const mockTikZContent = `# Instructions de génération automatique des graphiques TikZ
+
+## Génération automatique de graphiques mathématiques
+
+Lorsque l'exercice nécessite une représentation graphique (tableaux de variation, arbres de probabilité, diagrammes), vous devez générer automatiquement le code TikZ approprié et l'intégrer dans la correction LaTeX.
+
+### Détection des besoins graphiques :
+- Tableaux de variation de fonctions
+- Arbres de probabilité (horizontaux ou verticaux)
+- Diagrammes géométriques simples
+- Représentations de suites ou séries
+
+### Format TikZ requis :
+Utilisez le package tkz-tab pour les tableaux de variation et tkz-tree pour les arbres de probabilité.
+
+#### Exemples de code TikZ :
+
+**Tableau de variation simple :**
+\`\`\`latex
+\\begin{center}
+  \\begin{tikzpicture}[scale=0.7]
+  \\tkzTabInit[lgt=2,espcl=2]{$x$/1, $f'(x)$/1, $f(x)$/2}{$-\infty$, $2$, $+\infty$}
+  \\tkzTabLine{, -, z, +, }
+  \\tkzTabVar{+/, -/$-1$, +/}
+  \\end{tikzpicture}
+\\end{center}
+\`\`\`
+
+**Arbre de probabilité horizontal :**
+\`\`\`latex
+\\begin{center}
+  \\begin{tikzpicture}[scale=0.8]
+  \\tkzTreeInit
+  \\tkzTreeSetLevelSpacing{2cm}
+  \\tkzTreeSetNodeSpacing{1.5cm}
+  \\tkzTreeGrowFromLeft
+  \\tkzTreeNode{$0.3$}{\\node[draw,circle](a){A};}
+  \\tkzTreeEdge
+  \\tkzTreeNode{$0.7$}{\\node[draw,circle](b){B};}
+  \\tkzTreeEdgeFrom(a)
+  \\tkzTreeNode{$0.6$}{\\node[draw,circle](c){C};}
+  \\tkzTreeEdge
+  \\tkzTreeNode{$0.4$}{\\node[draw,circle](d){D};}
+  \\end{tikzpicture}
+\\end{center}
+\`\`\`
+
+### Intégration dans la correction :
+- Placez le code TikZ dans un environnement center
+- Utilisez scale=0.7 pour les tableaux de variation
+- Assurez-vous que le code est valide LaTeX
+- Commentez le graphique : % Graphique TikZ généré automatiquement`;
+
+        const mockExtensionContext = {
+            extensionUri: vscode.Uri.file('/mock/extension/path')
+        } as vscode.ExtensionContext;
+
+        // Mock fs.readFileSync to return both verification and TikZ content
+        const mockReadFileSync = sandbox.stub(require('fs'), 'readFileSync');
+        mockReadFileSync.onFirstCall().returns(mockTikZContent); // First call for TikZ
+        mockReadFileSync.onSecondCall().returns(''); // Second call for verification (empty for this test)
+
+        // Mock configuration
+        sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+            get: sandbox.stub().returns('')
+        } as any);
+
+        // Sample exercise content requiring graphics
+        const exerciseContent = '\\begin{exercice}\nTracer le tableau de variation de f(x) = x² - 4x + 3\n\\end{exercice}';
+
+        // WHEN: Generating pedagogical prompt with extension context
+        const prompt = generatePedagogicalPrompt(exerciseContent, undefined, mockExtensionContext);
+
+        // THEN: Prompt includes TikZ graphics generation instructions
+        assert.ok(prompt.includes('Instructions de génération automatique des graphiques TikZ'));
+        assert.ok(prompt.includes('tableaux de variation'));
+        assert.ok(prompt.includes('arbres de probabilité'));
+        assert.ok(prompt.includes('\\tkzTabInit'));
+        assert.ok(prompt.includes('\\tkzTreeInit'));
+        assert.ok(prompt.includes('scale=0.7'));
+        assert.ok(prompt.includes('% Graphique TikZ généré automatiquement'));
+    });
 });

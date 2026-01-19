@@ -71,7 +71,7 @@ development_status:
   epic-4-retrospective: optional
 
   epic-5: in-progress
-  5-1-generation-automatique-de-graphiques-tikz: ready-for-dev
+  5-1-generation-automatique-de-graphiques-tikz: review
   5-2-creation-d-arbres-de-probabilite-horizontaux: backlog
   5-3-production-de-tableaux-de-variation: backlog
   5-4-integration-des-graphiques-dans-les-corrections: backlog

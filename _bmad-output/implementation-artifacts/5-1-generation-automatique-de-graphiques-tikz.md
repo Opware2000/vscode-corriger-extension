@@ -19,10 +19,10 @@ So that les corrections incluent des représentations visuelles.
 
 ## Tasks / Subtasks
 
-- [ ] Mettre à jour les prompts IA pour génération automatique graphiques TikZ (AC: 1)
-  - [ ] Ajouter instructions spécifiques dans prompts pour génération TikZ
-  - [ ] Inclure exemples de code TikZ pour arbres probabilité horizontaux et tableaux variation
-  - [ ] Spécifier format LaTeX correct pour intégration TikZ
+- [x] Mettre à jour les prompts IA pour génération automatique graphiques TikZ (AC: 1)
+   - [x] Ajouter instructions spécifiques dans prompts pour génération TikZ
+   - [x] Inclure exemples de code TikZ pour arbres probabilité horizontaux et tableaux variation
+   - [x] Spécifier format LaTeX correct pour intégration TikZ
 
 ## Dev Notes
 
@@ -121,7 +121,7 @@ So that les corrections incluent des représentations visuelles.
 - Technologies : TypeScript, Python pour calculs, TikZ pour graphiques
 
 ## Statut Final Story
-Status: ready-for-dev
+Status: review
 Completion Note: Analyse exhaustive complétée - guide développeur complet créé pour génération automatique graphiques TikZ
 
 ## Dev Agent Record
@@ -134,4 +134,19 @@ x-ai/grok-code-fast-1
 
 ### Completion Notes List
 
+- Implémentation des prompts TikZ : Créé src/prompts/tikz-instructions.md avec instructions complètes pour génération automatique de graphiques TikZ
+- Modification correction-generator.ts : Ajout du chargement des instructions TikZ dans generatePedagogicalPrompt et generateBatchPedagogicalPrompt
+- Tests unitaires : Ajout test de validation inclusion instructions TikZ dans les prompts
+- Exemples TikZ inclus : Tableaux de variation avec tkz-tab et arbres de probabilité avec tkz-tree
+- Format LaTeX spécifié : Intégration dans environnement center avec scale approprié
+
 ### File List
+
+- src/prompts/tikz-instructions.md (created) - Nouvelles instructions pour génération automatique de graphiques TikZ
+- src/correction-generator.ts (modified) - Ajout chargement instructions TikZ dans generatePedagogicalPrompt et generateBatchPedagogicalPrompt
+- src/test/suites/correction-generator.test.ts (modified) - Ajout test validation inclusion instructions TikZ
+- _bmad-output/implementation-artifacts/5-1-generation-automatique-de-graphiques-tikz.md (modified) - Mise à jour statut tâches et notes implémentation
+
+## Change Log
+
+- Implémentation prompts TikZ pour génération automatique graphiques mathématiques (2026-01-19)

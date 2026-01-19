@@ -39,6 +39,17 @@ export function generatePedagogicalPrompt(exerciseContent: string, documentStruc
         prompt = `Vous êtes un professeur de mathématiques. Corrigez cet exercice LaTeX : ${exerciseContent}`;
     }
 
+    // Append TikZ graphics instructions
+    if (extensionContext) {
+        try {
+            const tikzUri = vscode.Uri.joinPath(extensionContext.extensionUri, 'src', 'prompts', 'tikz-instructions.md');
+            const tikzInstructions = fs.readFileSync(tikzUri.fsPath, 'utf8');
+            prompt += '\n\n' + tikzInstructions;
+        } catch (error) {
+            logger.warn('Could not load TikZ instructions', error as Error);
+        }
+    }
+
     // Append verification instructions
     if (extensionContext) {
         try {
@@ -191,6 +202,17 @@ function generateBatchPedagogicalPrompt(exercises: string[], documentStructure?:
     prompt += `Pour chaque exercice, structurez votre réponse avec :\n`;
     prompt += `=== CORRECTION EXERCICE N° ===\n`;
     prompt += `[Contenu de la correction en LaTeX valide, sans \\begin{correction} ou \\end{correction}]\n\n`;
+
+    // Ajouter les instructions TikZ
+    if (extensionContext) {
+        try {
+            const tikzUri = vscode.Uri.joinPath(extensionContext.extensionUri, 'src', 'prompts', 'tikz-instructions.md');
+            const tikzInstructions = fs.readFileSync(tikzUri.fsPath, 'utf8');
+            prompt += '\n\n' + tikzInstructions;
+        } catch (error) {
+            logger.warn('Could not load TikZ instructions', error as Error);
+        }
+    }
 
     // Ajouter les instructions de vérification
     if (extensionContext) {
