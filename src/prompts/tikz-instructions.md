@@ -13,6 +13,12 @@ Lorsque l'exercice nécessite une représentation graphique (tableaux de variati
 ### Format TikZ requis :
 Utilisez le package tkz-tab pour les tableaux de variation et tkz-tree pour les arbres de probabilité.
 
+### Instructions spécifiques pour les arbres de probabilité horizontaux :
+- Utilisez grow=right pour l'orientation horizontale
+- Positionnez les probabilités sur les branches avec edge label
+- Utilisez des nœuds circulaires pour représenter les événements
+- Assurez-vous que les probabilités sont correctement alignées et lisibles
+
 ### Déclarations de packages LaTeX :
 Si le document LaTeX n'inclut pas déjà les packages nécessaires, ajoutez les déclarations suivantes au début de votre correction :
 - \usepackage{tikz}
@@ -63,11 +69,52 @@ Si le document LaTeX n'inclut pas déjà les packages nécessaires, ajoutez les 
 \end{center}
 ```
 
+**Arbre de probabilité simple (2 niveaux) :**
+```latex
+\begin{center}
+\begin{tikzpicture}[grow=right, level distance=2cm, sibling distance=1cm]
+  \node {Événement A}
+    child {node {Sous-événement A1} edge from parent node[left] {0.3}}
+    child {node {Sous-événement A2} edge from parent node[right] {0.7}};
+\end{tikzpicture}
+\end{center}
+```
+
+**Arbre de probabilité avec tkz-tree :**
+```latex
+\begin{center}
+\begin{tikzpicture}
+  \tikzset{edge from parent/.style={draw, edge label}}
+  \node {A}
+    child {node {B} edge from parent node {0.4}}
+    child {node {C} edge from parent node {0.6}};
+\end{tikzpicture}
+\end{center}
+```
+
+**Arbre de probabilité horizontal complexe :**
+```latex
+\begin{center}
+  \begin{tikzpicture}[grow=right, level distance=2cm, sibling distance=1.5cm]
+    \node {Événement initial}
+      child {node {Branche 1}
+        child {node {Résultat 1.1} edge from parent node[left] {0.2}}
+        child {node {Résultat 1.2} edge from parent node[right] {0.3}}
+        edge from parent node[left] {0.5}}
+      child {node {Branche 2}
+        child {node {Résultat 2.1} edge from parent node[left] {0.4}}
+        child {node {Résultat 2.2} edge from parent node[right] {0.1}}
+        edge from parent node[right] {0.5}};
+  \end{tikzpicture}
+\end{center}
+```
+
 ### Intégration dans la correction :
 - Placez le code TikZ dans un environnement center
 - Utilisez scale=0.7 pour les tableaux de variation
+- Utilisez scale=0.8 pour les arbres de probabilité
 - Assurez-vous que le code est valide LaTeX
-- Commentez le graphique : % Graphique TikZ généré automatiquement
+- Commentez le graphique : % Arbre de probabilité TikZ généré automatiquement
 
 ### Instructions impératives :
 - **Détectez automatiquement** les besoins graphiques dans l'exercice
