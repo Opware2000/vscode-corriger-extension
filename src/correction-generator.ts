@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { generateCorrectionWithOpenAI } from './openai-integration';
 import { callCopilotWithTimeout, isCopilotAvailable } from './copilot-integration';
 import { analyzeDocumentStructure, formatCorrectionWithLatexEnvironments } from './latex-parser';
-import { MESSAGES } from './constants';
+import { MESSAGES, PROMPT_PATHS } from './constants';
 import { logger } from './logger';
 import { getConfig } from './config';
 
@@ -42,18 +42,19 @@ export function generatePedagogicalPrompt(exerciseContent: string, documentStruc
     // Append TikZ graphics instructions
     if (extensionContext) {
         try {
-            const tikzUri = vscode.Uri.joinPath(extensionContext.extensionUri, 'src', 'prompts', 'tikz-instructions.md');
+            const tikzUri = vscode.Uri.joinPath(extensionContext.extensionUri, ...PROMPT_PATHS.TIKZ_INSTRUCTIONS);
             const tikzInstructions = fs.readFileSync(tikzUri.fsPath, 'utf8');
             prompt += '\n\n' + tikzInstructions;
         } catch (error) {
-            logger.warn('Could not load TikZ instructions', error as Error);
+            logger.error('Could not load TikZ instructions', error as Error);
+            throw new Error('TikZ instructions file not found. Cannot generate TikZ graphics.');
         }
     }
 
     // Append verification instructions
     if (extensionContext) {
         try {
-            const verificationUri = vscode.Uri.joinPath(extensionContext.extensionUri, 'src', 'prompts', 'verification-instructions.md');
+            const verificationUri = vscode.Uri.joinPath(extensionContext.extensionUri, ...PROMPT_PATHS.VERIFICATION_INSTRUCTIONS);
             const verificationInstructions = fs.readFileSync(verificationUri.fsPath, 'utf8');
             prompt += '\n\n' + verificationInstructions;
         } catch (error) {
@@ -206,18 +207,19 @@ function generateBatchPedagogicalPrompt(exercises: string[], documentStructure?:
     // Ajouter les instructions TikZ
     if (extensionContext) {
         try {
-            const tikzUri = vscode.Uri.joinPath(extensionContext.extensionUri, 'src', 'prompts', 'tikz-instructions.md');
+            const tikzUri = vscode.Uri.joinPath(extensionContext.extensionUri, ...PROMPT_PATHS.TIKZ_INSTRUCTIONS);
             const tikzInstructions = fs.readFileSync(tikzUri.fsPath, 'utf8');
             prompt += '\n\n' + tikzInstructions;
         } catch (error) {
-            logger.warn('Could not load TikZ instructions', error as Error);
+            logger.error('Could not load TikZ instructions', error as Error);
+            throw new Error('TikZ instructions file not found. Cannot generate TikZ graphics.');
         }
     }
 
     // Ajouter les instructions de vérification
     if (extensionContext) {
         try {
-            const verificationUri = vscode.Uri.joinPath(extensionContext.extensionUri, 'src', 'prompts', 'verification-instructions.md');
+            const verificationUri = vscode.Uri.joinPath(extensionContext.extensionUri, ...PROMPT_PATHS.VERIFICATION_INSTRUCTIONS);
             const verificationInstructions = fs.readFileSync(verificationUri.fsPath, 'utf8');
             prompt += '\n\n' + verificationInstructions;
         } catch (error) {

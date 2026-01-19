@@ -78,3 +78,9 @@ export const DECORATION_STYLES = {
     EXERCISE_HIGHLIGHT_BORDER: '2px solid rgba(255, 255, 0, 0.8)',
     EXERCISE_HIGHLIGHT_BORDER_RADIUS: '3px'
 } as const;
+
+// Prompt file paths
+export const PROMPT_PATHS = {
+    TIKZ_INSTRUCTIONS: ['src', 'prompts', 'tikz-instructions.md'],
+    VERIFICATION_INSTRUCTIONS: ['src', 'prompts', 'verification-instructions.md']
+} as const;

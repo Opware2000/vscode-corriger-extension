@@ -13,6 +13,13 @@ Lorsque l'exercice nécessite une représentation graphique (tableaux de variati
 ### Format TikZ requis :
 Utilisez le package tkz-tab pour les tableaux de variation et tkz-tree pour les arbres de probabilité.
 
+### Déclarations de packages LaTeX :
+Si le document LaTeX n'inclut pas déjà les packages nécessaires, ajoutez les déclarations suivantes au début de votre correction :
+- \usepackage{tikz}
+- \usepackage{tkz-tab} (pour les tableaux de variation)
+- \usepackage{tkz-tree} (pour les arbres de probabilité)
+- \usetikzlibrary{calc,arrows.meta} (si nécessaire pour des fonctionnalités avancées)
+
 #### Exemples de code TikZ :
 
 **Tableau de variation simple :**

@@ -121,8 +121,8 @@ So that les corrections incluent des représentations visuelles.
 - Technologies : TypeScript, Python pour calculs, TikZ pour graphiques
 
 ## Statut Final Story
-Status: review
-Completion Note: Analyse exhaustive complétée - guide développeur complet créé pour génération automatique graphiques TikZ
+Status: done
+Completion Note: Implémentation complète avec corrections revue code - génération automatique graphiques TikZ opérationnelle
 
 ## Dev Agent Record
 
@@ -139,14 +139,18 @@ x-ai/grok-code-fast-1
 - Tests unitaires : Ajout test de validation inclusion instructions TikZ dans les prompts
 - Exemples TikZ inclus : Tableaux de variation avec tkz-tab et arbres de probabilité avec tkz-tree
 - Format LaTeX spécifié : Intégration dans environnement center avec scale approprié
+- Corrections revue code : Ajout déclarations packages LaTeX dans instructions, constantes pour chemins, gestion erreurs améliorée, mise à jour File List
 
 ### File List
 
 - src/prompts/tikz-instructions.md (created) - Nouvelles instructions pour génération automatique de graphiques TikZ
 - src/correction-generator.ts (modified) - Ajout chargement instructions TikZ dans generatePedagogicalPrompt et generateBatchPedagogicalPrompt
 - src/test/suites/correction-generator.test.ts (modified) - Ajout test validation inclusion instructions TikZ
+- src/constants.ts (modified) - Ajout constantes pour chemins des fichiers de prompts
 - _bmad-output/implementation-artifacts/5-1-generation-automatique-de-graphiques-tikz.md (modified) - Mise à jour statut tâches et notes implémentation
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified) - Mise à jour statut story vers 'review'
 
 ## Change Log
 
 - Implémentation prompts TikZ pour génération automatique graphiques mathématiques (2026-01-19)
+- Corrections revue code : ajout déclarations packages, constantes chemins, gestion erreurs, File List (2026-01-19)
