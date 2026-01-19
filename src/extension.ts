@@ -246,12 +246,14 @@ async function showCorrectionPreview(correction: string): Promise<'insert' | 're
  * @param context Le contexte du chat
  * @param response Le stream de réponse
  * @param token Token d'annulation
+ * @param extensionContext Contexte d'extension pour accéder aux ressources
  */
 async function handleChatParticipantRequest(
 	_request: vscode.ChatRequest,
 	_context: vscode.ChatContext,
 	response: vscode.ChatResponseStream,
-	token: vscode.CancellationToken
+	token: vscode.CancellationToken,
+	extensionContext: vscode.ExtensionContext
 ): Promise<void> {
 	try {
 		// Analyser le contexte de correction (document, sélection, curseur)
@@ -297,7 +299,7 @@ async function handleChatParticipantRequest(
 		// Générer la correction
 		response.markdown(`Génération de la correction pour l'exercice ${targetExercise.number}...`);
 
-		const correction = await generateCorrection(targetExercise.content, documentContent, token);
+		const correction = await generateCorrection(targetExercise.content, documentContent, token, extensionContext);
 
 		response.markdown(`**Correction de l'exercice ${targetExercise.number} :**\n\n${correction}`);
 
@@ -632,7 +634,15 @@ function registerCommands(context: vscode.ExtensionContext): void {
 function registerChatParticipant(context: vscode.ExtensionContext): void {
 	// Vérifier si l'API de chat est disponible
 	if (typeof vscode.chat?.createChatParticipant === 'function') {
-		const chatParticipant = vscode.chat.createChatParticipant('corriger', handleChatParticipantRequest);
+		// Créer un handler qui capture le contexte d'extension
+		const handler = (
+			request: vscode.ChatRequest,
+			chatContext: vscode.ChatContext,
+			response: vscode.ChatResponseStream,
+			token: vscode.CancellationToken
+		) => handleChatParticipantRequest(request, chatContext, response, token, context);
+
+		const chatParticipant = vscode.chat.createChatParticipant('corriger', handler);
 		chatParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'resources', 'icon.png'); // Optionnel
 		context.subscriptions.push(chatParticipant);
 		logger.info('Participant de chat "corriger" enregistré');

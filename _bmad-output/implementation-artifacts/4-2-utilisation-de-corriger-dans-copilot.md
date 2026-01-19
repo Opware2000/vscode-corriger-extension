@@ -1,6 +1,6 @@
 # Story 4.2: utilisation-de-corriger-dans-copilot
 
-Status: review
+Status: completed
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
