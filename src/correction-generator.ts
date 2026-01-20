@@ -6,6 +6,7 @@ import { analyzeDocumentStructure, formatCorrectionWithLatexEnvironments } from 
 import { MESSAGES, PROMPT_PATHS } from './constants';
 import { logger } from './logger';
 import { getConfig } from './config';
+import { sanitizeLatexContent, isSafeFilePath } from './utils';
 
 
 /**
@@ -19,13 +20,16 @@ import { getConfig } from './config';
  * ```
  */
 export function generatePedagogicalPrompt(exerciseContent: string, documentStructure?: import('./latex-parser').DocumentStructure, extensionContext?: vscode.ExtensionContext): string {
+    // Sanitiser le contenu de l'exercice pour la sécurité
+    const sanitizedExerciseContent = sanitizeLatexContent(exerciseContent);
+
     const template = getConfig('pedagogicalPrompt', '') as string;
 
     let prompt: string;
 
     if (template && template.trim()) {
         // Replace the placeholder with actual exercise content
-        prompt = template.replace('{{exerciseContent}}', exerciseContent);
+        prompt = template.replace('{{exerciseContent}}', sanitizedExerciseContent);
 
         // Add document structure context if available
         if (documentStructure) {
@@ -38,9 +42,15 @@ export function generatePedagogicalPrompt(exerciseContent: string, documentStruc
         // Utiliser le prompt par défaut depuis le fichier
         if (extensionContext) {
             try {
+                // Vérifier que le chemin est sûr avant de l'utiliser
+                const promptPath = PROMPT_PATHS.PEDAGOGICAL_PROMPT.join('/');
+                if (!isSafeFilePath(promptPath)) {
+                    throw new Error(`Chemin de fichier prompt non autorisé: ${promptPath}`);
+                }
+
                 const promptUri = vscode.Uri.joinPath(extensionContext.extensionUri, ...PROMPT_PATHS.PEDAGOGICAL_PROMPT);
                 const defaultPrompt = fs.readFileSync(promptUri.fsPath, 'utf8');
-                prompt = defaultPrompt.replace('{{exerciseContent}}', exerciseContent);
+                prompt = defaultPrompt.replace('{{exerciseContent}}', sanitizedExerciseContent);
 
                 // Add document structure context if available
                 if (documentStructure) {
@@ -52,17 +62,21 @@ export function generatePedagogicalPrompt(exerciseContent: string, documentStruc
             } catch (error) {
                 logger.error('Impossible de lire le fichier de prompt pédagogique par défaut', error as Error);
                 // Fallback minimal si erreur de lecture
-                prompt = `Vous êtes un professeur de mathématiques. Corrigez cet exercice LaTeX : ${exerciseContent}`;
+                prompt = `Vous êtes un professeur de mathématiques. Corrigez cet exercice LaTeX : ${sanitizedExerciseContent}`;
             }
         } else {
             // Fallback minimal si pas de contexte d'extension
-            prompt = `Vous êtes un professeur de mathématiques. Corrigez cet exercice LaTeX : ${exerciseContent}`;
+            prompt = `Vous êtes un professeur de mathématiques. Corrigez cet exercice LaTeX : ${sanitizedExerciseContent}`;
         }
     }
 
     // Append TikZ graphics instructions
     if (extensionContext) {
         try {
+            const tikzPath = PROMPT_PATHS.TIKZ_INSTRUCTIONS.join('/');
+            if (!isSafeFilePath(tikzPath)) {
+                throw new Error(`Chemin de fichier TikZ non autorisé: ${tikzPath}`);
+            }
             const tikzUri = vscode.Uri.joinPath(extensionContext.extensionUri, ...PROMPT_PATHS.TIKZ_INSTRUCTIONS);
             const tikzInstructions = fs.readFileSync(tikzUri.fsPath, 'utf8');
             prompt += '\n\n' + tikzInstructions;
@@ -75,6 +89,10 @@ export function generatePedagogicalPrompt(exerciseContent: string, documentStruc
     // Append verification instructions
     if (extensionContext) {
         try {
+            const verificationPath = PROMPT_PATHS.VERIFICATION_INSTRUCTIONS.join('/');
+            if (!isSafeFilePath(verificationPath)) {
+                throw new Error(`Chemin de fichier vérification non autorisé: ${verificationPath}`);
+            }
             const verificationUri = vscode.Uri.joinPath(extensionContext.extensionUri, ...PROMPT_PATHS.VERIFICATION_INSTRUCTIONS);
             const verificationInstructions = fs.readFileSync(verificationUri.fsPath, 'utf8');
             prompt += '\n\n' + verificationInstructions;
@@ -141,8 +159,11 @@ export async function generateBatchCorrections(
                 throw new Error(MESSAGES.COPILOT_UNAVAILABLE);
             }
 
+            // Sanitiser tous les contenus d'exercices
+            const sanitizedExercises = exercises.map(ex => sanitizeLatexContent(ex));
+
             // Créer un prompt batch qui demande toutes les corrections
-            const batchPrompt = generateBatchPedagogicalPrompt(exercises, documentStructure, extensionContext);
+            const batchPrompt = generateBatchPedagogicalPrompt(sanitizedExercises, documentStructure, extensionContext);
 
             const messages = [vscode.LanguageModelChatMessage.User(batchPrompt)];
             const timeout = getConfig('copilotTimeout', 30000);
@@ -228,6 +249,10 @@ function generateBatchPedagogicalPrompt(exercises: string[], documentStructure?:
     // Ajouter les instructions TikZ
     if (extensionContext) {
         try {
+            const tikzPath = PROMPT_PATHS.TIKZ_INSTRUCTIONS.join('/');
+            if (!isSafeFilePath(tikzPath)) {
+                throw new Error(`Chemin de fichier TikZ non autorisé: ${tikzPath}`);
+            }
             const tikzUri = vscode.Uri.joinPath(extensionContext.extensionUri, ...PROMPT_PATHS.TIKZ_INSTRUCTIONS);
             const tikzInstructions = fs.readFileSync(tikzUri.fsPath, 'utf8');
             prompt += '\n\n' + tikzInstructions;
@@ -240,6 +265,10 @@ function generateBatchPedagogicalPrompt(exercises: string[], documentStructure?:
     // Ajouter les instructions de vérification
     if (extensionContext) {
         try {
+            const verificationPath = PROMPT_PATHS.VERIFICATION_INSTRUCTIONS.join('/');
+            if (!isSafeFilePath(verificationPath)) {
+                throw new Error(`Chemin de fichier vérification non autorisé: ${verificationPath}`);
+            }
             const verificationUri = vscode.Uri.joinPath(extensionContext.extensionUri, ...PROMPT_PATHS.VERIFICATION_INSTRUCTIONS);
             const verificationInstructions = fs.readFileSync(verificationUri.fsPath, 'utf8');
             prompt += '\n\n' + verificationInstructions;
@@ -304,6 +333,9 @@ export async function generateCorrection(
     try {
         logger.info('Début de génération de correction pour un exercice');
 
+        // Sanitiser le contenu de l'exercice pour la sécurité
+        const sanitizedExerciseContent = sanitizeLatexContent(exerciseContent);
+
         // Analyser la structure du document si fournie pour la numérotation
         let documentStructure = undefined;
         if (documentContent) {
@@ -320,7 +352,7 @@ export async function generateCorrection(
                 throw new Error(MESSAGES.COPILOT_UNAVAILABLE);
             }
 
-            const prompt = generatePedagogicalPrompt(exerciseContent, documentStructure, extensionContext);
+            const prompt = generatePedagogicalPrompt(sanitizedExerciseContent, documentStructure, extensionContext);
 
             const messages = [vscode.LanguageModelChatMessage.User(prompt)];
             const timeout = getConfig('copilotTimeout', 30000);
@@ -331,7 +363,7 @@ export async function generateCorrection(
             }
         } else {
             // Utiliser OpenAI
-            correction = await generateCorrectionWithOpenAI(exerciseContent, cancellationToken);
+            correction = await generateCorrectionWithOpenAI(sanitizedExerciseContent, cancellationToken);
         }
 
         logger.info('Correction générée avec succès');
