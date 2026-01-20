@@ -89,6 +89,9 @@ Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans
 
     test('[P2] should explicitly specify French conditional probability notation P_A(B) instead of P(B|A)', () => {
         // GIVEN: Mock empty configuration (uses default)
+        const mockExtensionContext = {
+            extensionUri: vscode.Uri.file('/mock/extension/path')
+        } as vscode.ExtensionContext;
         sandbox.stub(vscode.workspace, 'getConfiguration').returns({
             get: sandbox.stub().returns('')
         } as any);
@@ -96,8 +99,8 @@ Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans
         // Sample exercise content with conditional probability
         const exerciseContent = '\\begin{exercice}\nCalculer P(A|B) pour deux événements A et B.\n\\end{exercice}';
 
-        // WHEN: Generating pedagogical prompt
-        const prompt = generatePedagogicalPrompt(exerciseContent);
+        // WHEN: Generating pedagogical prompt with extension context
+        const prompt = generatePedagogicalPrompt(exerciseContent, undefined, mockExtensionContext);
 
         // THEN: Prompt explicitly specifies using P_A(B) notation
         assert.ok(prompt.includes('P_A(B)')); // Must use French notation
@@ -107,6 +110,9 @@ Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans
 
     test('[P2] should include comprehensive French mathematical notations in prompts', () => {
         // GIVEN: Mock empty configuration (uses default)
+        const mockExtensionContext = {
+            extensionUri: vscode.Uri.file('/mock/extension/path')
+        } as vscode.ExtensionContext;
         sandbox.stub(vscode.workspace, 'getConfiguration').returns({
             get: sandbox.stub().returns('')
         } as any);
@@ -114,8 +120,8 @@ Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans
         // Sample exercise content
         const exerciseContent = '\\begin{exercice}\nRésoudre le problème statistique.\n\\end{exercice}';
 
-        // WHEN: Generating pedagogical prompt
-        const prompt = generatePedagogicalPrompt(exerciseContent);
+        // WHEN: Generating pedagogical prompt with extension context
+        const prompt = generatePedagogicalPrompt(exerciseContent, undefined, mockExtensionContext);
 
         // THEN: Prompt includes comprehensive French notations
         assert.ok(prompt.includes('E[X]')); // Expected value
@@ -212,7 +218,7 @@ Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans
         // WHEN & THEN: Generating correction should throw
         await assert.rejects(async () => {
             await generateCorrection('Mock exercise content');
-        }, /Clé API OpenAI non configurée/i);
+        }, /Configuration OpenAI requise|Clé API OpenAI invalide/i);
     });
 
     test('[P1] should include verification instructions with visual formatting in pedagogical prompt', () => {

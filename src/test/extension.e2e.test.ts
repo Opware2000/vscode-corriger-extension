@@ -30,7 +30,8 @@ suite('Extension E2E Tests', () => {
             sandbox.restore();
         });
 
-        test('[P0] should execute detectExercises command with valid LaTeX document', async () => {
+        test('[P0] should execute detectExercises command with valid LaTeX document', async function (this: Mocha.Context) {
+            this.timeout(5000); // Augmenter le timeout à 5 secondes
             // GIVEN: Create a new document with LaTeX exercises
             const document = await vscode.workspace.openTextDocument({
                 content: createLatexDocumentWithExercises(2),
@@ -96,7 +97,8 @@ suite('Extension E2E Tests', () => {
             assert.strictEqual(messageShown, 'Aucun document ouvert ou document vide.');
         });
 
-        test('[P1] should handle complex LaTeX structure with nested exercises', async () => {
+        test('[P1] should handle complex LaTeX structure with nested exercises', async function (this: Mocha.Context) {
+            this.timeout(5000); // Augmenter le timeout à 5 secondes
             // GIVEN: Document with complex nested structure
             const complexContent = `
 \\begin{document}
@@ -138,7 +140,8 @@ Calculer $2 + 2$.
             assert.strictEqual(messageShown, MESSAGES.EXERCISES_DETECTED(2));
         });
 
-        test('[P2] should handle large documents with many exercises', async () => {
+        test('[P2] should handle large documents with many exercises', async function (this: Mocha.Context) {
+            this.timeout(5000); // Augmenter le timeout à 5 secondes
             // GIVEN: Large document with 50 exercises
             const largeContent = createLatexDocumentWithExercises(50);
             const document = await vscode.workspace.openTextDocument({

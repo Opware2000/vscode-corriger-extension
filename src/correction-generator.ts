@@ -35,8 +35,29 @@ export function generatePedagogicalPrompt(exerciseContent: string, documentStruc
             prompt = prompt.replace('{{documentContext}}', '');
         }
     } else {
-        // Fallback minimal si configuration vide
-        prompt = `Vous êtes un professeur de mathématiques. Corrigez cet exercice LaTeX : ${exerciseContent}`;
+        // Utiliser le prompt par défaut depuis le fichier
+        if (extensionContext) {
+            try {
+                const promptUri = vscode.Uri.joinPath(extensionContext.extensionUri, ...PROMPT_PATHS.PEDAGOGICAL_PROMPT);
+                const defaultPrompt = fs.readFileSync(promptUri.fsPath, 'utf8');
+                prompt = defaultPrompt.replace('{{exerciseContent}}', exerciseContent);
+
+                // Add document structure context if available
+                if (documentStructure) {
+                    const contextInfo = generateDocumentContext(documentStructure);
+                    prompt = prompt.replace('{{documentContext}}', contextInfo);
+                } else {
+                    prompt = prompt.replace('{{documentContext}}', '');
+                }
+            } catch (error) {
+                logger.error('Impossible de lire le fichier de prompt pédagogique par défaut', error as Error);
+                // Fallback minimal si erreur de lecture
+                prompt = `Vous êtes un professeur de mathématiques. Corrigez cet exercice LaTeX : ${exerciseContent}`;
+            }
+        } else {
+            // Fallback minimal si pas de contexte d'extension
+            prompt = `Vous êtes un professeur de mathématiques. Corrigez cet exercice LaTeX : ${exerciseContent}`;
+        }
     }
 
     // Append TikZ graphics instructions

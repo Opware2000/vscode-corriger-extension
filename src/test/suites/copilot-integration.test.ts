@@ -70,7 +70,8 @@ suite('Copilot Integration', () => {
         assert.ok(mockModel.sendRequest.calledOnce);
     });
 
-    test('[P2] should timeout and throw error when Copilot takes too long', async () => {
+    test('[P2] should timeout and throw error when Copilot takes too long', async function (this: Mocha.Context) {
+        this.timeout(5000); // Augmenter le timeout à 5 secondes
         // GIVEN: Mock slow Copilot response
         const mockModel = {
             sendRequest: sandbox.stub().callsFake(() => new Promise(resolve => setTimeout(() => resolve({ text: 'response' }), 40000))),

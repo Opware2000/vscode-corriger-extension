@@ -82,5 +82,6 @@ export const DECORATION_STYLES = {
 // Prompt file paths
 export const PROMPT_PATHS = {
     TIKZ_INSTRUCTIONS: ['src', 'prompts', 'tikz-instructions.md'],
-    VERIFICATION_INSTRUCTIONS: ['src', 'prompts', 'verification-instructions.md']
+    VERIFICATION_INSTRUCTIONS: ['src', 'prompts', 'verification-instructions.md'],
+    PEDAGOGICAL_PROMPT: ['src', 'prompts', 'pedagogical-prompt.md']
 } as const;
