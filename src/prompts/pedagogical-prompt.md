@@ -106,4 +106,92 @@ Utilisez le package tkz-tab pour générer le tableau TikZ. Si nécessaire, ajou
 - Fonctions définies par parties : adapter les intervalles en conséquence
 - Fonctions trigonométriques : gérer les périodes et les discontinuités
 
+## Intégration des graphiques dans les corrections
+
+Lorsque vous générez des graphiques TikZ (tableaux de variation, arbres de probabilité, diagrammes géométriques), vous devez les intégrer correctement dans la structure LaTeX de la correction.
+
+### Environnements LaTeX requis :
+- **Utilisez toujours un environnement center** pour les graphiques
+- **Ajoutez un environnement figure** si le graphique doit être référencé ou légendé
+- **Utilisez des labels et captions** pour permettre les références croisées
+
+### Structure d'intégration correcte :
+
+#### Pour les graphiques simples (sans légende) :
+```latex
+\begin{center}
+  \begin{tikzpicture}[scale=0.7]
+  % Code TikZ du graphique
+  \end{tikzpicture}
+\end{center}
+```
+
+#### Pour les graphiques avec légende :
+```latex
+\begin{figure}[h]
+  \begin{center}
+    \begin{tikzpicture}[scale=0.7]
+    % Code TikZ du graphique
+    \end{tikzpicture}
+  \end{center}
+  \caption{Légende descriptive du graphique}
+  \label{fig:graphique_nom}
+\end{figure}
+```
+
+#### Pour les tableaux de variation :
+```latex
+\begin{figure}[h]
+  \begin{center}
+    \begin{tikzpicture}[scale=0.7]
+    \tkzTabInit[lgt=2,espcl=2]{$x$/1, $f'(x)$/1, $f(x)$/2}{$-\infty$, $1$, $+\infty$}
+    \tkzTabLine{, +, z, -, }
+    \tkzTabVar{-/, +/$4$, -/}
+    \end{tikzpicture}
+  \end{center}
+  \caption{Tableau de variation de la fonction $f$}
+  \label{tab:variation_fonction}
+\end{figure}
+```
+
+#### Pour les arbres de probabilité :
+```latex
+\begin{figure}[h]
+  \begin{center}
+    \begin{tikzpicture}[scale=0.8]
+    \tikzset{edge from parent/.style={draw, edge label}}
+    \node {A}
+      child {node {B} edge from parent node {0.4}}
+      child {node {C} edge from parent node {0.6}};
+    \end{tikzpicture}
+  \end{center}
+  \caption{Arbre de probabilité pour l'expérience aléatoire}
+  \label{fig:arbre_proba}
+\end{figure}
+```
+
+### Règles d'intégration impératives :
+- **Positionnez les graphiques** au bon endroit dans la correction (après l'explication théorique, avant les calculs)
+- **Utilisez des labels uniques** pour chaque graphique (fig:tableau_var_1, fig:arbre_proba_2, etc.)
+- **Écrivez les légendes en français** et de manière pédagogique
+- **Maintenez le flux logique** du document autour des graphiques
+- **Vérifiez la compilation LaTeX** du code généré
+- **Commentez chaque graphique** : % Graphique TikZ intégré automatiquement
+
+### Gestion de plusieurs graphiques :
+- Numérotez séquentiellement les labels (fig:graphique_1, fig:graphique_2)
+- Placez les graphiques proches du texte qui les référence
+- Utilisez des légendes distinctes et descriptives
+- Assurez-vous que les références croisées fonctionnent
+
+### Packages LaTeX requis :
+Si nécessaire, ajoutez au début de votre correction :
+```latex
+\usepackage{tikz}
+\usepackage{tkz-tab}      % Pour les tableaux de variation
+\usepackage{tkz-tree}     % Pour les arbres de probabilité
+\usepackage{graphicx}     % Pour les figures
+\usetikzlibrary{calc,arrows.meta} % Librairies TikZ supplémentaires
+```
+
 Répondez uniquement avec le contenu de la correction en code LaTeX valide, sans balises \begin{correction} ou \end{correction}.
